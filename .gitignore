@@ -1,0 +1,28 @@
+# Gradle build artefacts
+.gradle/
+build/
+*.iml
+.idea/
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Android
+android/local.properties
+android/*.keystore
+android/key.properties
+*.jks
+
+# Model files — do not commit large binaries to git
+# Place these manually per MODEL_PLACEHOLDER.txt
+android/app/src/main/assets/ml/*.tflite
+android/app/src/main/assets/ml/*.jpg
+android/app/src/main/assets/ml/*.png
+
+# OS artefacts
+.DS_Store
+Thumbs.db

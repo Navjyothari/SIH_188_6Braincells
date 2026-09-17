@@ -1,0 +1,15 @@
+THIS IS A PLACEHOLDER.
+
+Place a synthetic (AI-generated, no real identity) reference face JPEG here:
+  android/app/src/main/assets/ml/synthetic_reference_face.jpg
+
+Requirements:
+  - Image must be AI-generated or from a face dataset with explicit permissive licence.
+  - NO real, non-consented identity photos may be used.
+  - Recommended source: DiffusionFace synthetic benchmark (AAAI 2024),
+    or generate with Stable Diffusion / similar with a "fictional person" prompt.
+  - Resolution: at least 200×200 px (ML Kit will detect and align it).
+
+This file is used ONLY as a development/demo reference.
+In production, the reference face should come from a consented capture flow,
+NOT a bundled asset.
