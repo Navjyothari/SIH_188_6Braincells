@@ -47,11 +47,18 @@ class FaceAlignmentHelper {
      *                landmarks are unavailable.
      */
     fun cropAndAlign(source: Bitmap, face: Face): Bitmap {
-        val leftEyeLm  = face.getLandmark(FaceLandmark.LEFT_EYE)
-        val rightEyeLm = face.getLandmark(FaceLandmark.RIGHT_EYE)
+        // ML Kit uses subject-centric labels.
+        // FaceLandmark.LEFT_EYE is the subject's left eye (appears on viewer's right).
+        // Our affineAlignedCrop expects (viewerLeft, viewerRight).
+        val subjectLeftEyeLm  = face.getLandmark(FaceLandmark.LEFT_EYE)
+        val subjectRightEyeLm = face.getLandmark(FaceLandmark.RIGHT_EYE)
 
-        return if (leftEyeLm != null && rightEyeLm != null) {
-            affineAlignedCrop(source, leftEyeLm.position, rightEyeLm.position)
+        return if (subjectLeftEyeLm != null && subjectRightEyeLm != null) {
+            affineAlignedCrop(
+                source, 
+                subjectRightEyeLm.position, // Viewer's left
+                subjectLeftEyeLm.position   // Viewer's right
+            )
         } else {
             bboxFallbackCrop(source, face)
         }
@@ -81,11 +88,11 @@ class FaceAlignmentHelper {
 
         // 3. Build transform: rotate around the left-eye point, then translate
         val matrix = Matrix()
-        // Step A: rotate around the source left-eye centre
+        // Step A: rotate around the source left-eye centre (keeps leftEye at leftEye)
         matrix.postRotate(-angle, leftEye.x, leftEye.y)
-        // Step B: scale around the left-eye centre
-        matrix.postScale(scale, scale, leftEye.x, leftEye.y)
-        // Step C: translate so the transformed left-eye lands on canonical position
+        // Step B: scale relative to the origin (moves leftEye to leftEye * scale)
+        matrix.postScale(scale, scale)
+        // Step C: translate so the scaled left-eye lands on canonical position
         val tx = CANONICAL_LEFT_EYE.x - leftEye.x * scale
         val ty = CANONICAL_LEFT_EYE.y - leftEye.y * scale
         matrix.postTranslate(tx, ty)

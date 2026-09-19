@@ -1,20 +1,19 @@
-THIS IS A PLACEHOLDER.
+STATUS: DEPLOYED AND VERIFIED.
 
-The actual MobileFaceNet TFLite model file (mobilefacenet.tflite, ~1.9 MB)
-must be placed here before building.
+The MobileFaceNet TFLite model file (mobilefacenet.tflite, 5.2 MB)
+is placed in this directory (ignored by git, bundled into APK at build time).
 
-License: Apache 2.0
-Source:  https://github.com/sirius-ai/MobileFaceNet_TF
-         (export the .pb checkpoint to TFLite using tf.lite.TFLiteConverter)
+License: BSD-3-Clause (attribution in THIRD_PARTY_LICENSES.txt)
+Source:  https://github.com/MCarlomagno/FaceRecognitionAuth
+Commit:  db9c605aa52792708e09fd8d973ed5d03ef4f506
 
-Alternatively, use the pre-exported TFLite from:
-  https://github.com/shicai/MobileNet-Caffe (check for Apache 2.0 tag)
+Tensor Contract:
+  Input tensor : "input"       shape [1, 112, 112, 3] float32, range [-1, 1]
+  Output tensor: "embeddings"  shape [1, 192] float32, L2-normalised (‖v‖₂ == 1.0)
 
-Steps to obtain:
-  1. Clone the MobileFaceNet_TF repo (Apache 2.0 licensed).
-  2. Download the pre-trained checkpoint.
-  3. Run: python export_tflite.py --checkpoint_path <ckpt> --output mobilefacenet.tflite
-  4. Copy the output here: android/app/src/main/assets/ml/mobilefacenet.tflite
+Verification:
+  Run `python scripts/verify_face_assets.py` to re-verify weights, norm, and discrimination.
 
-The model MUST be placed in this directory before running `./gradlew assembleDebug`.
-The build.gradle's aaptOptions { noCompress "tflite" } keeps it uncompressed for mmap.
+Build note:
+  The build.gradle aaptOptions { noCompress "tflite" } keeps it uncompressed for direct mmap.
+

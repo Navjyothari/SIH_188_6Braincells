@@ -18,7 +18,8 @@ import java.util.concurrent.CountDownLatch
  *   Stage 2 — Embedding + comparison (MobileFaceNet TFLite, CPU)
  *
  * LICENSING:
- *   MobileFaceNet weights:  Apache 2.0  — redistribution inside APK permitted.
+ *   MobileFaceNet weights:  BSD-3-Clause — redistribution inside APK permitted
+ *                            (copyright notice must appear in docs).
  *   ML Kit face detection:  Apache 2.0  — bundled variant, no runtime download.
  *   TFLite runtime:         Apache 2.0  — CPU-only.
  *
@@ -64,7 +65,7 @@ class FaceVerificationModule(private val context: Context) {
         // Replace with a consented real face or a runtime-captured reference as needed.
         private const val SYNTHETIC_REF_ASSET = "ml/synthetic_reference_face.jpg"
 
-        const val MODEL_VERSION = "mobilefacenet-v1-apache2"
+        const val MODEL_VERSION = "mobilefacenet-v1-192d-bsd3"
 
         // -------------------------------------------------------------------
         // Thresholds — fixed on the 20-pair synthetic dev set described above.
@@ -126,16 +127,22 @@ class FaceVerificationModule(private val context: Context) {
         return try {
             // ---------- Stage 1a: detect + align live face ----------
             val liveAligned = detectAndAlign(liveBitmap)
-                ?: return FaceVerificationResult.notRun().also {
-                    Log.w(TAG, "No face detected in live image")
-                }
 
             // ---------- Stage 1b: detect + align reference face ----------
             val refBitmap = referenceBitmap ?: loadSyntheticReference()
             val refAligned = detectAndAlign(refBitmap)
-                ?: return FaceVerificationResult.notRun().also {
-                    Log.w(TAG, "No face detected in reference image")
-                }
+
+            if (liveAligned == null || refAligned == null) {
+                val liveFound = if (liveAligned != null) "yes" else "no"
+                val refFound = if (refAligned != null) "yes" else "no"
+                val debugStr = "Face in document/reference: $refFound\nFace in selfie/live: $liveFound"
+                Log.w(TAG, "Detection failed: $debugStr")
+                return FaceVerificationResult.notRun(debugStr)
+            }
+
+            // Save crops to cache for debug UI
+            val liveCropPath = saveCropToCache(liveAligned, "debug_live_crop.jpg")
+            val refCropPath = saveCropToCache(refAligned, "debug_ref_crop.jpg")
 
             // ---------- Stage 2a: compute embeddings ----------
             val liveEmbedding = runner.computeEmbedding(liveAligned)
@@ -155,7 +162,9 @@ class FaceVerificationModule(private val context: Context) {
                 status          = status,
                 similarityScore = score,
                 thresholdUsed   = THRESHOLD_MATCH,
-                modelVersion    = MODEL_VERSION
+                modelVersion    = MODEL_VERSION,
+                liveCropPath    = liveCropPath,
+                refCropPath     = refCropPath
             )
         } catch (e: Exception) {
             Log.e(TAG, "Verification failed unexpectedly: ${e.message}", e)
@@ -224,5 +233,18 @@ class FaceVerificationModule(private val context: Context) {
         }
         val denom = Math.sqrt((normA * normB).toDouble()).toFloat()
         return if (denom < 1e-8f) 0f else dot / denom
+    }
+
+    private fun saveCropToCache(bitmap: Bitmap, filename: String): String? {
+        return try {
+            val file = java.io.File(context.cacheDir, filename)
+            java.io.FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save debug crop: ${e.message}")
+            null
+        }
     }
 }

@@ -101,4 +101,22 @@ class FaceVerificationService {
       return FaceVerificationResult.notRun();
     }
   }
+
+  /// Convenience wrapper for the screening session flow.
+  ///
+  /// Calls [verifyFace] with:
+  ///   liveImagePath      = [selfieImagePath]   (front-camera selfie)
+  ///   referenceImagePath = [documentImagePath] (rear-camera doc photo;
+  ///                         the Kotlin pipeline finds the face within it)
+  ///
+  /// Use this from LiveSelfieCaptureScreen after both images are available.
+  /// Never throws — all errors surface as NOT_RUN via [verifyFace].
+  Future<FaceVerificationResult> verifyFaceFromPaths({
+    required String selfieImagePath,
+    required String documentImagePath,
+  }) =>
+      verifyFace(
+        liveImagePath:      selfieImagePath,
+        referenceImagePath: documentImagePath,
+      );
 }

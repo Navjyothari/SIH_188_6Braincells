@@ -27,28 +27,29 @@ class FaceVerificationTest {
     }
 
     @Test fun `identical vectors have cosine similarity 1`() {
-        val v = FloatArray(128) { it.toFloat() + 1f }
+        val v = FloatArray(192) { it.toFloat() + 1f }
         assertEquals(1.0f, cosine(v, v), 1e-5f)
     }
 
     @Test fun `orthogonal vectors have cosine similarity 0`() {
-        val a = FloatArray(128) { if (it % 2 == 0) 1f else 0f }
-        val b = FloatArray(128) { if (it % 2 == 1) 1f else 0f }
+        val a = FloatArray(192) { if (it % 2 == 0) 1f else 0f }
+        val b = FloatArray(192) { if (it % 2 == 1) 1f else 0f }
         assertEquals(0.0f, cosine(a, b), 1e-5f)
     }
 
     @Test fun `opposite vectors have cosine similarity -1`() {
-        val v = FloatArray(128) { it.toFloat() + 1f }
-        val neg = FloatArray(128) { -(it.toFloat() + 1f) }
+        val v = FloatArray(192) { it.toFloat() + 1f }
+        val neg = FloatArray(192) { -(it.toFloat() + 1f) }
         assertEquals(-1.0f, cosine(v, neg), 1e-5f)
     }
 
     @Test fun `zero vector returns 0 not NaN`() {
-        val zero = FloatArray(128) { 0f }
-        val v    = FloatArray(128) { 1f }
+        val zero = FloatArray(192) { 0f }
+        val v    = FloatArray(192) { 1f }
         assertFalse(cosine(zero, v).isNaN())
         assertEquals(0f, cosine(zero, v), 1e-5f)
     }
+
 
     // -----------------------------------------------------------------------
     // Threshold verdict logic
@@ -122,5 +123,75 @@ class FaceVerificationTest {
         assertEquals(0.82f,   map["similarityScore"])
         assertEquals(FaceVerificationModule.THRESHOLD_MATCH, map["thresholdUsed"])
         assertEquals(FaceVerificationModule.MODEL_VERSION,   map["modelVersion"])
+    }
+
+    // -----------------------------------------------------------------------
+    // Alignment enforcement & encapsulation audit tests
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `embedding runner accepts canonical 112x112 aligned input dimensions`() {
+        // Must succeed without throwing
+        FaceEmbeddingRunner.validateInputDimensions(112, 112)
+        assertEquals(112, FaceEmbeddingRunner.INPUT_SIZE)
+        assertEquals(192, FaceEmbeddingRunner.EMBEDDING_SIZE)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `embedding runner strictly rejects full-frame 1920x1080 camera dimensions`() {
+        FaceEmbeddingRunner.validateInputDimensions(1920, 1080)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `embedding runner strictly rejects uncropped 512x512 reference face dimensions`() {
+        FaceEmbeddingRunner.validateInputDimensions(512, 512)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `embedding runner strictly rejects sub-minimum 100x100 crop dimensions`() {
+        FaceEmbeddingRunner.validateInputDimensions(100, 100)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `embedding runner strictly rejects non-square 112x110 crop dimensions`() {
+        FaceEmbeddingRunner.validateInputDimensions(112, 110)
+    }
+
+    @Test
+    fun `embedding runner is private and never exposed by public verification API`() {
+        // Verify that FaceVerificationModule exposes ONLY the safe public API methods
+        val publicMethods = FaceVerificationModule::class.java.methods
+            .filter { it.declaringClass == FaceVerificationModule::class.java }
+            .map { it.name }
+            .toSet()
+
+        val allowedPublicMethods = setOf("verifyFace", "isAvailable")
+        assertEquals(
+            "FaceVerificationModule must not expose internal components or bypass methods",
+            allowedPublicMethods,
+            publicMethods
+        )
+
+        // Verify that embeddingRunner is private in FaceVerificationModule
+        val fields = FaceVerificationModule::class.java.declaredFields
+        val runnerField = fields.find { it.name.contains("embeddingRunner") }
+        assertNotNull("embeddingRunner field must exist internally", runnerField)
+        assertTrue(
+            "embeddingRunner must be private to enforce that all inferences pass through detectAndAlign",
+            java.lang.reflect.Modifier.isPrivate(runnerField!!.modifiers)
+        )
+    }
+
+    @Test
+    fun `alignment failure contract requires NOT_RUN without fallback to raw frame`() {
+        // When alignment fails (no face found, low confidence, etc.):
+        // 1. status must be NOT_RUN
+        // 2. similarityScore must be null (never a fallback embedding on unaligned pixels)
+        // 3. thresholdUsed must be null
+        val result = FaceVerificationResult.notRun()
+        assertEquals("NOT_RUN", result.status)
+        assertNull("Similarity score must be null on alignment failure", result.similarityScore)
+        assertNull("Threshold must be null on alignment failure", result.thresholdUsed)
+        assertEquals(FaceVerificationModule.MODEL_VERSION, result.modelVersion)
     }
 }

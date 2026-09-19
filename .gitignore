@@ -23,6 +23,12 @@ android/app/src/main/assets/ml/*.tflite
 android/app/src/main/assets/ml/*.jpg
 android/app/src/main/assets/ml/*.png
 
+# Test-only fixtures and candidate assets
+scripts/test_fixtures/
+scripts/*.jpg
+scripts/*.tflite
+
+
 # OS artefacts
 .DS_Store
 Thumbs.db

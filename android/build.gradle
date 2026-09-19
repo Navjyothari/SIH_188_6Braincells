@@ -1,0 +1,34 @@
+// Top-level build file — shared configuration for all sub-projects/modules.
+// This is the ROOT build.gradle (android/build.gradle), not app-level.
+
+buildscript {
+    ext.kotlin_version = '2.2.20'
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        // Android Gradle Plugin — must match compileSdkVersion 34 in app/build.gradle
+        classpath 'com.android.tools.build:gradle:8.11.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.layout.buildDirectory
+}
+
+rootProject.layout.buildDirectory = file("../build")
+subprojects {
+    project.layout.buildDirectory = file("${rootProject.layout.buildDirectory.get().asFile.path}/${project.name}")
+}
+project.evaluationDependsOn(':app')

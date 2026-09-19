@@ -102,7 +102,7 @@ class _FaceVerificationWidgetState extends State<FaceVerificationWidget> {
       maxWidth: 640,
       maxHeight: 640,
       imageQuality: 90,
-      preferFrontCamera: true,
+      preferredCameraDevice: CameraDevice.front,
     );
     if (picked == null) return;
 

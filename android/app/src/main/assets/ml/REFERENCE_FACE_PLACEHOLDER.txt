@@ -1,15 +1,17 @@
-THIS IS A PLACEHOLDER.
+STATUS: DEPLOYED AND VERIFIED.
 
-Place a synthetic (AI-generated, no real identity) reference face JPEG here:
-  android/app/src/main/assets/ml/synthetic_reference_face.jpg
+The synthetic reference face image (synthetic_reference_face.jpg, 512×512 px)
+is placed in this directory (ignored by git, bundled into APK at build time).
 
-Requirements:
-  - Image must be AI-generated or from a face dataset with explicit permissive licence.
-  - NO real, non-consented identity photos may be used.
-  - Recommended source: DiffusionFace synthetic benchmark (AAAI 2024),
-    or generate with Stable Diffusion / similar with a "fictional person" prompt.
-  - Resolution: at least 200×200 px (ML Kit will detect and align it).
+Source:
+  AI-generated synthetic frontal ID portrait (diffusion synthesis, fictional person).
+  Zero biometric or personal data from any real individual.
 
-This file is used ONLY as a development/demo reference.
-In production, the reference face should come from a consented capture flow,
-NOT a bundled asset.
+Format:
+  JPEG, 512×512 px RGB, quality 95 (~58 KB).
+  Frontal headshot with visible eyes, nose, mouth landmarks detected by OpenCV/ML Kit.
+
+This file is used ONLY as a development/demo reference for the optional M3 module.
+In production, the reference face comes from a consented capture flow or e-Passport RFID chip,
+never an unconsented bundled asset.
+

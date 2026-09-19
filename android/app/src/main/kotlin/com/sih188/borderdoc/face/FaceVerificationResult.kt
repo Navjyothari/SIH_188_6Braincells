@@ -25,7 +25,10 @@ data class FaceVerificationResult(
     val status:          String,        // "MATCH" | "NO_MATCH" | "UNCERTAIN" | "NOT_RUN"
     val similarityScore: Float?,        // null when status == NOT_RUN
     val thresholdUsed:   Float?,        // null when status == NOT_RUN
-    val modelVersion:    String
+    val modelVersion:    String,
+    val debugInfo:       String? = null,
+    val liveCropPath:    String? = null,
+    val refCropPath:     String? = null
 ) {
     companion object {
         /**
@@ -33,11 +36,12 @@ data class FaceVerificationResult(
          * fails to load, no face is detected, or consent conditions aren't met.
          * NEVER returns a fake score or a hardcoded verdict.
          */
-        fun notRun(): FaceVerificationResult = FaceVerificationResult(
+        fun notRun(debugInfo: String? = null): FaceVerificationResult = FaceVerificationResult(
             status          = "NOT_RUN",
             similarityScore = null,
             thresholdUsed   = null,
-            modelVersion    = FaceVerificationModule.MODEL_VERSION
+            modelVersion    = FaceVerificationModule.MODEL_VERSION,
+            debugInfo       = debugInfo
         )
     }
 
@@ -49,6 +53,9 @@ data class FaceVerificationResult(
         "status"          to status,
         "similarityScore" to similarityScore,
         "thresholdUsed"   to thresholdUsed,
-        "modelVersion"    to modelVersion
+        "modelVersion"    to modelVersion,
+        "debugInfo"       to debugInfo,
+        "liveCropPath"    to liveCropPath,
+        "refCropPath"     to refCropPath
     )
 }

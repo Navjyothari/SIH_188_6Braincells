@@ -29,15 +29,15 @@ It **never** touches the core document-parsing pipeline and **never** makes netw
 
 | # | Model | Format | License | APK redistribution? |
 |---|-------|--------|---------|-------------------|
-| **Selected** | **MobileFaceNet** (Sheng Chen et al., 2018) | **TFLite** | **Apache 2.0** | ✅ **Yes — permissive, bundling inside APK is permitted** |
+| **Selected** | **MobileFaceNet** (Sheng Chen et al., 2018; pretrained) | **TFLite** | **BSD-3-Clause** | ✅ **Yes — permissive, bundling inside APK is permitted** |
 | Alt 1 | FaceNet (Sandberg port) | TFLite | MIT | ✅ Yes — fully permissive |
 | Alt 2 | ArcFace-slim (InsightFace) | ONNX | ⚠️ MIT repo, but some pre-trained weights carry non-commercial clauses | ⚠️ Ambiguous — verify specific weight checkpoint licence before use |
 
 **Why MobileFaceNet was chosen:**  
-- ~1.9 MB TFLite model — minimal APK size increase.  
-- Apache 2.0: unambiguously permits redistribution inside commercial and student-project APKs.  
+- ~5.2 MB TFLite model — lightweight on-device footprint.  
+- BSD-3-Clause: permits redistribution inside APKs (attribution retained in `THIRD_PARTY_LICENSES.txt`).  
 - ~15–30 ms CPU inference on mid-range Android (Snapdragon 665).  
-- 128-d L2-normalised embeddings compatible with cosine similarity.
+- 192-d L2-normalised embeddings (norm == 1.0) compatible with cosine similarity.
 
 ---
 
@@ -64,7 +64,7 @@ Live JPEG (from camera)
 │                              │
 │ MobileFaceNet TFLite (CPU)   │  ← FaceEmbeddingRunner.kt
 │ Input:  [1, 112, 112, 3]     │
-│ Output: FloatArray(128)      │
+│ Output: FloatArray(192)      │
 │                              │
 │ Cosine similarity vs ref     │  ← FaceVerificationModule.kt
 └──────────────────────────────┘
@@ -159,12 +159,12 @@ No other file needs to change. The core document-screening flow is unaffected.
 
 ## Model setup (before first build)
 
-1. Obtain `mobilefacenet.tflite` (Apache 2.0):
-   - Clone https://github.com/sirius-ai/MobileFaceNet_TF
-   - Export the checkpoint to TFLite: `python export_tflite.py ...`
-   - **OR** use a pre-exported TFLite from a verified Apache 2.0 release.
-2. Copy to: `android/app/src/main/assets/ml/mobilefacenet.tflite`
-3. Place a synthetic reference face at: `android/app/src/main/assets/ml/synthetic_reference_face.jpg`
+1. Obtain `mobilefacenet.tflite` (BSD-3-Clause):
+   - Pretrained model from https://github.com/MCarlomagno/FaceRecognitionAuth
+   - Copy to: `android/app/src/main/assets/ml/mobilefacenet.tflite`
+2. Place a synthetic reference face at:
+   - `android/app/src/main/assets/ml/synthetic_reference_face.jpg` (AI-generated 512×512 px frontal portrait)
+3. Both assets are ignored by `.gitignore` and bundled into the APK at build time.
 4. Build: `./gradlew assembleDebug`
 
 ---
