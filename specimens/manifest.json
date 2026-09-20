@@ -1,0 +1,183 @@
+{
+  "seed": 1882026,
+  "synthetic": true,
+  "layout": "FICTIONAL PASSPORT ALPHA",
+  "imageSize": [
+    1600,
+    1000
+  ],
+  "fontSha256": "3fdf69cabf06049ea70a00b5919340e2ce1e6d02b0cc3c4b44fb6801bd1e0d22",
+  "reviewStatus": "PENDING_INDEPENDENT_HUMAN_CHECK",
+  "specimens": [
+    {
+      "id": "01-clean",
+      "image": "01-clean.png",
+      "sha256": "91bb92b391afdd91f2a24ae6ea114bdd3c65b2853e5cab72c4f92f17ee959528",
+      "expectedFields": {
+        "documentNumber": "TEST558198",
+        "repeatedNumber": "TEST558198"
+      },
+      "expectedState": "NO_INCONSISTENCY_DETECTED",
+      "alterations": []
+    },
+    {
+      "id": "01-altered",
+      "image": "01-altered.png",
+      "sha256": "624736b820c515b3a50e3d4f24abe58db25e57c1e8cb730d2982a2297fb1cc36",
+      "expectedFields": {
+        "documentNumber": "TEST558198",
+        "repeatedNumber": "TEST558199"
+      },
+      "expectedState": "REVIEW_REQUIRED",
+      "alterations": [
+        {
+          "field": "repeatedNumber",
+          "before": "TEST558198",
+          "after": "TEST558199",
+          "boxXYXY": [
+            65,
+            735,
+            1100,
+            800
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02-clean",
+      "image": "02-clean.png",
+      "sha256": "3a8ea9e51a426010660a14f4f9a0717af5180e42251d0d3c125ad172a2e2c854",
+      "expectedFields": {
+        "documentNumber": "TEST143215",
+        "repeatedNumber": "TEST143215"
+      },
+      "expectedState": "NO_INCONSISTENCY_DETECTED",
+      "alterations": []
+    },
+    {
+      "id": "02-altered",
+      "image": "02-altered.png",
+      "sha256": "4894696a9b57c9dc48e84e4e9446cd129684d5755b743e777a208688e514e904",
+      "expectedFields": {
+        "documentNumber": "TEST143215",
+        "repeatedNumber": "TEST143216"
+      },
+      "expectedState": "REVIEW_REQUIRED",
+      "alterations": [
+        {
+          "field": "repeatedNumber",
+          "before": "TEST143215",
+          "after": "TEST143216",
+          "boxXYXY": [
+            65,
+            735,
+            1100,
+            800
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03-clean",
+      "image": "03-clean.png",
+      "sha256": "a74d567db69bbcd6f5ef61f3082fbdb61008ba29edf29e8d52c97f2b44574b7a",
+      "expectedFields": {
+        "documentNumber": "TEST331666",
+        "repeatedNumber": "TEST331666"
+      },
+      "expectedState": "NO_INCONSISTENCY_DETECTED",
+      "alterations": []
+    },
+    {
+      "id": "03-altered",
+      "image": "03-altered.png",
+      "sha256": "9de444fe5886f3a847b41bedd0a7080c9bad0c5f97738129d71b78ae63fde97e",
+      "expectedFields": {
+        "documentNumber": "TEST331666",
+        "repeatedNumber": "TEST331667"
+      },
+      "expectedState": "REVIEW_REQUIRED",
+      "alterations": [
+        {
+          "field": "repeatedNumber",
+          "before": "TEST331666",
+          "after": "TEST331667",
+          "boxXYXY": [
+            65,
+            735,
+            1100,
+            800
+          ]
+        }
+      ]
+    },
+    {
+      "id": "04-clean",
+      "image": "04-clean.png",
+      "sha256": "6653a01fc53caa6f77c346acaf51e372e37be4100c9575456db4285fd062b11b",
+      "expectedFields": {
+        "documentNumber": "TEST702306",
+        "repeatedNumber": "TEST702306"
+      },
+      "expectedState": "NO_INCONSISTENCY_DETECTED",
+      "alterations": []
+    },
+    {
+      "id": "04-altered",
+      "image": "04-altered.png",
+      "sha256": "bbe498dd6713679a33921833e737f35b5286a80ef79fe506e8382536e7911d02",
+      "expectedFields": {
+        "documentNumber": "TEST702306",
+        "repeatedNumber": "TEST702307"
+      },
+      "expectedState": "REVIEW_REQUIRED",
+      "alterations": [
+        {
+          "field": "repeatedNumber",
+          "before": "TEST702306",
+          "after": "TEST702307",
+          "boxXYXY": [
+            65,
+            735,
+            1100,
+            800
+          ]
+        }
+      ]
+    },
+    {
+      "id": "05-clean",
+      "image": "05-clean.png",
+      "sha256": "c862e92f09c205688e3b0cae45dc3f78afdc791fb854da35ed41439d1cc12cd9",
+      "expectedFields": {
+        "documentNumber": "TEST152572",
+        "repeatedNumber": "TEST152572"
+      },
+      "expectedState": "NO_INCONSISTENCY_DETECTED",
+      "alterations": []
+    },
+    {
+      "id": "05-altered",
+      "image": "05-altered.png",
+      "sha256": "8f0b8d32d3bc6860f00a0304db34ae52643f4392292c0d5f5365090df53561f0",
+      "expectedFields": {
+        "documentNumber": "TEST152572",
+        "repeatedNumber": "TEST152573"
+      },
+      "expectedState": "REVIEW_REQUIRED",
+      "alterations": [
+        {
+          "field": "repeatedNumber",
+          "before": "TEST152572",
+          "after": "TEST152573",
+          "boxXYXY": [
+            65,
+            735,
+            1100,
+            800
+          ]
+        }
+      ]
+    }
+  ]
+}

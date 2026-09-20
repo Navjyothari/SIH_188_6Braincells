@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fictional Screen phase 1 result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "policyVersion", "layout", "synthetic", "state", "governmentVerification", "explanation", "fields", "findings"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "policyVersion": {"const": "number-consistency/1"},
+    "layout": {"const": "FICTIONAL PASSPORT ALPHA", "description": "Parser target, not a claim that unsupported input matches it."},
+    "synthetic": {"const": true},
+    "state": {"enum": ["RECAPTURE", "UNSUPPORTED", "NO_INCONSISTENCY_DETECTED", "REVIEW_REQUIRED"]},
+    "governmentVerification": {"const": "NOT_CONFIGURED"},
+    "explanation": {"type": "string", "minLength": 1},
+    "fields": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"documentNumber": {"type": "string", "pattern": "^TEST[0-9]{6}$"}, "repeatedNumber": {"type": "string", "pattern": "^TEST[0-9]{6}$"}}
+    },
+    "findings": {
+      "type": "array", "maxItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["ruleId", "explanation", "firstField", "secondField"],
+        "properties": {
+          "ruleId": {"const": "DOCUMENT_NUMBER_REPEAT_MISMATCH"},
+          "explanation": {"type": "string"},
+          "firstField": {"const": "documentNumber"},
+          "secondField": {"const": "repeatedNumber"}
+        }
+      }
+    }
+  }
+}
