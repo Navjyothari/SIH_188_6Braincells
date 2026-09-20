@@ -10,12 +10,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final original = File('specimens/01-altered.png').readAsBytesSync();
   final text = File('specimens/01-altered.txt').readAsStringSync();
+  var recognizedText = text;
   final records = <String, String>{};
   var failSave = false;
   var cancel = false;
   String? ocrError;
   setUp(() {
     records.clear();
+    recognizedText = text;
     failSave = false;
     cancel = false;
     ocrError = null;
@@ -26,7 +28,7 @@ void main() {
               return cancel ? null : {'bytes': original, 'rotation': 0};
             case 'recognize':
               if (ocrError != null) throw PlatformException(code: ocrError!);
-              return {'text': text, 'blocks': <dynamic>[]};
+              return {'text': recognizedText, 'blocks': <dynamic>[]};
             case 'save':
               if (failSave) throw PlatformException(code: 'STORAGE_FAILED');
               records['test-record'] =
@@ -67,6 +69,62 @@ void main() {
       expect(records.length, 1);
     },
   );
+  const header = 'SPECIMEN - NOT VALID FOR TRAVEL\nFICTIONAL PASSPORT ALPHA\n';
+  final outcomes = <(String, String)>[
+    (
+      'NO_INCONSISTENCY_DETECTED',
+      '${header}DOCUMENT NUMBER: TEST123456\nREPEATED NUMBER: TEST123456',
+    ),
+    (
+      'REVIEW_REQUIRED',
+      '${header}DOCUMENT NUMBER: TEST123456\nREPEATED NUMBER: TEST123457',
+    ),
+    ('RECAPTURE', '${header}DOCUMENT NUMBER: TEST123456'),
+    ('UNSUPPORTED', 'An unrelated document with enough readable text'),
+  ];
+  for (final (state, input) in outcomes) {
+    testWidgets(
+      '$state is displayed, saved and reopened without changing its conclusion',
+      (tester) async {
+        recognizedText = input;
+        await tester.pumpWidget(const ScreeningApp());
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Capture fictional specimen'));
+        await tester.pumpAndSettle();
+        expect(find.text(state.replaceAll('_', ' ')), findsOneWidget);
+        final saved = records.values.single;
+        final envelope = jsonDecode(saved) as Map;
+        expect(envelope['result']['state'], state);
+        expect(envelope['result']['governmentVerification'], 'NOT_CONFIGURED');
+        expect(envelope['result']['synthetic'], true);
+        expect(envelope['ocr']['text'], input);
+        expect(
+          base64Decode(envelope['original']['base64'] as String),
+          original,
+        );
+        expect(
+          find.text(envelope['result']['explanation'] as String),
+          findsOneWidget,
+        );
+        if (state == 'RECAPTURE' || state == 'UNSUPPORTED') {
+          expect(envelope['result']['fields'], isEmpty);
+          expect(envelope['result']['findings'], isEmpty);
+        }
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(const ScreeningApp());
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Synthetic capture'));
+        await tester.tap(find.text('Synthetic capture'));
+        await tester.pumpAndSettle();
+        expect(find.text(state.replaceAll('_', ' ')), findsOneWidget);
+        expect(
+          find.text(envelope['result']['explanation'] as String),
+          findsOneWidget,
+        );
+        expect(records.values.single, saved);
+      },
+    );
+  }
   testWidgets('failed save stays unsaved and retry preserves original', (
     tester,
   ) async {

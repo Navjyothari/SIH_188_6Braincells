@@ -70,6 +70,52 @@ void main() {
       }
     });
   }
+  final abstentionCases = <String, String>{
+    'missing document': '${header}REPEATED NUMBER: TEST123456',
+    'repeat OCR ambiguity':
+        '${header}DOCUMENT NUMBER: TEST123456\nREPEATED NUMBER: TEST12345O',
+    'conflicting repeated fields':
+        '${header}DOCUMENT NUMBER: TEST123456\nREPEATED NUMBER: TEST123456\nREPEATED NUMBER: TEST123457',
+    'identical repeated fields duplicated':
+        '${header}DOCUMENT NUMBER: TEST123456\nREPEATED NUMBER: TEST123456\nREPEATED NUMBER: TEST123456',
+    'both equally malformed':
+        '${header}DOCUMENT NUMBER: TEST12345\nREPEATED NUMBER: TEST12345',
+    'extra digit':
+        '${header}DOCUMENT NUMBER: TEST1234567\nREPEATED NUMBER: TEST123456',
+    'trailing OCR text':
+        '${header}DOCUMENT NUMBER: TEST123456 EXTRA\nREPEATED NUMBER: TEST123456',
+    'label at end without value':
+        '${header}DOCUMENT NUMBER: TEST123456\nREPEATED NUMBER:',
+  };
+  for (final entry in abstentionCases.entries) {
+    test('no conclusion for ${entry.key}', () {
+      final result = screen(entry.value);
+      expect(result.state, ScreeningState.recapture);
+      expect(result.fields, isEmpty);
+      expect(result.findings, isEmpty);
+      expect(result.explanation, contains('no consistency conclusion'));
+      expect(result.toJson()['governmentVerification'], 'NOT_CONFIGURED');
+    });
+  }
+  test('unsupported layout takes precedence over a readable mismatch', () {
+    final result = screen(
+      'SPECIMEN - NOT VALID FOR TRAVEL\nFICTIONAL PASSPORT BETA\n'
+      'DOCUMENT NUMBER: TEST123456\nREPEATED NUMBER: TEST123457',
+    );
+    expect(result.state, ScreeningState.unsupported);
+    expect(result.fields, isEmpty);
+    expect(result.findings, isEmpty);
+  });
+  test('matching numbers explicitly disclaim authenticity and identity', () {
+    final result = screen(
+      '${header}DOCUMENT NUMBER TEST123456\nREPEATED NUMBER TEST123456',
+    );
+    expect(result.state, ScreeningState.noInconsistency);
+    expect(
+      result.explanation,
+      contains('does not establish document authenticity or identity'),
+    );
+  });
   test('generated specimens match recorded expectations (text, not OCR)', () {
     final manifest =
         jsonDecode(File('specimens/manifest.json').readAsStringSync()) as Map;
