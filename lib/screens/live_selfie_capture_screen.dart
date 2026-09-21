@@ -147,7 +147,13 @@ class _LiveSelfieCaptureScreenState extends State<LiveSelfieCaptureScreen>
                     return _ErrorState(
                         message: 'Camera initialisation failed:\n${snap.error}');
                   }
-                  return _LivePreview(controller: _controller!);
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _LivePreview(controller: _controller!),
+                      const _FaceFramingOverlay(),
+                    ],
+                  );
                 },
               ),
 
@@ -561,6 +567,76 @@ class _VerifyingIndicator extends StatelessWidget {
           Text(
             'On-device only • No network call',
             style: TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FaceFramingOverlay extends StatelessWidget {
+  const _FaceFramingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Semi-transparent background with a clear oval
+          ColorFiltered(
+            colorFilter: const ColorFilter.mode(
+              Colors.black54,
+              BlendMode.srcOut,
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    backgroundBlendMode: BlendMode.dstOut,
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: 280,
+                    height: 380,
+                    decoration: BoxDecoration(
+                      color: Colors.white, // The cutout
+                      borderRadius: BorderRadius.circular(150),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Oval border
+          Center(
+            child: Container(
+              width: 280,
+              height: 380,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white70, width: 3),
+                borderRadius: BorderRadius.circular(150),
+              ),
+            ),
+          ),
+          // Short instruction text
+          const Positioned(
+            top: 100,
+            left: 0,
+            right: 0,
+            child: Text(
+              'Position face within the oval',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+              ),
+            ),
           ),
         ],
       ),

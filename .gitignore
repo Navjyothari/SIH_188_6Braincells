@@ -32,3 +32,6 @@ scripts/*.tflite
 # OS artefacts
 .DS_Store
 Thumbs.db
+
+# Release assets (intentionally not in git)
+release-assets/

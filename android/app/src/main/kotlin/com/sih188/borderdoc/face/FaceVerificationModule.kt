@@ -126,11 +126,11 @@ class FaceVerificationModule(private val context: Context) {
 
         return try {
             // ---------- Stage 1a: detect + align live face ----------
-            val liveAligned = detectAndAlign(liveBitmap)
+            val liveAligned = detectAndAlign(liveBitmap, "Live")
 
             // ---------- Stage 1b: detect + align reference face ----------
             val refBitmap = referenceBitmap ?: loadSyntheticReference()
-            val refAligned = detectAndAlign(refBitmap)
+            val refAligned = detectAndAlign(refBitmap, "Reference")
 
             if (liveAligned == null || refAligned == null) {
                 val liveFound = if (liveAligned != null) "yes" else "no"
@@ -183,7 +183,7 @@ class FaceVerificationModule(private val context: Context) {
      * ML Kit's bundled detector (com.google.mlkit:face-detection) does NOT
      * download any model at runtime — it ships fully inside the AAR.
      */
-    private fun detectAndAlign(bitmap: Bitmap): Bitmap? {
+    private fun detectAndAlign(bitmap: Bitmap, label: String): Bitmap? {
         val image = InputImage.fromBitmap(bitmap, 0)
         var alignedCrop: Bitmap? = null
         val latch = CountDownLatch(1)
@@ -193,12 +193,16 @@ class FaceVerificationModule(private val context: Context) {
                 if (faces.isNotEmpty()) {
                     // Use the largest detected face (most prominent in frame)
                     val face = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }!!
+                    val widthPercent = (face.boundingBox.width().toFloat() / bitmap.width.toFloat()) * 100f
+                    Log.d(TAG, "[$label] Face detected. Bounding box width is $widthPercent% of the full image width.")
                     alignedCrop = alignmentHelper.cropAndAlign(bitmap, face)
+                } else {
+                    Log.d(TAG, "[$label] No face detected.")
                 }
                 latch.countDown()
             }
             .addOnFailureListener { e ->
-                Log.w(TAG, "ML Kit detection failed: ${e.message}")
+                Log.w(TAG, "[$label] ML Kit detection failed: ${e.message}")
                 latch.countDown()
             }
 
