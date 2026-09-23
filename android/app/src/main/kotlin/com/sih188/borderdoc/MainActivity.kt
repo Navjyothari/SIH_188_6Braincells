@@ -85,42 +85,6 @@ class MainActivity : FlutterActivity() {
             }
     }
 
-    private fun decodeAndRotateBitmap(path: String): android.graphics.Bitmap? {
-        val bitmap = BitmapFactory.decodeFile(path) ?: return null
-        val matrix = android.graphics.Matrix()
-        try {
-            val exif = android.media.ExifInterface(path)
-            val orientation = exif.getAttributeInt(
-                android.media.ExifInterface.TAG_ORIENTATION,
-                android.media.ExifInterface.ORIENTATION_NORMAL
-            )
-            when (orientation) {
-                android.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
-                android.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
-                android.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
-                // Removed front-camera mirroring compensations as per request
-                // android.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1.0f, 1.0f)
-                // android.media.ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
-                //     matrix.preScale(1.0f, -1.0f)
-                //     matrix.postRotate(180f)
-                // }
-                // android.media.ExifInterface.ORIENTATION_TRANSPOSE -> {
-                //     matrix.preScale(-1.0f, 1.0f)
-                //     matrix.postRotate(90f)
-                // }
-                // android.media.ExifInterface.ORIENTATION_TRANSVERSE -> {
-                //     matrix.preScale(-1.0f, 1.0f)
-                //     matrix.postRotate(270f)
-                // }
-            }
-        } catch (e: Exception) {
-            // Ignore EXIF reading errors and return unrotated bitmap
-        }
-        
-        return if (matrix.isIdentity) {
-            bitmap
-        } else {
-            android.graphics.Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-        }
-    }
+    private fun decodeAndRotateBitmap(path: String): android.graphics.Bitmap? =
+        com.sih188.borderdoc.face.CaptureBitmapDecoder.decode(path)
 }

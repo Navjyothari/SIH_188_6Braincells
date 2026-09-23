@@ -6,8 +6,8 @@ import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
-import kotlinx.coroutines.tasks.await
-import java.util.concurrent.CountDownLatch
+import com.google.android.gms.tasks.Tasks
+import java.util.concurrent.TimeUnit
 
 /**
  * FaceVerificationModule — M3 optional module
@@ -126,11 +126,11 @@ class FaceVerificationModule(private val context: Context) {
 
         return try {
             // ---------- Stage 1a: detect + align live face ----------
-            val liveAligned = detectAndAlign(liveBitmap, "Live")
+            val liveAligned = detectAndAlign(liveBitmap)
 
             // ---------- Stage 1b: detect + align reference face ----------
             val refBitmap = referenceBitmap ?: loadSyntheticReference()
-            val refAligned = detectAndAlign(refBitmap, "Reference")
+            val refAligned = detectAndAlign(refBitmap)
 
             if (liveAligned == null || refAligned == null) {
                 val liveFound = if (liveAligned != null) "yes" else "no"
@@ -177,37 +177,18 @@ class FaceVerificationModule(private val context: Context) {
     // -----------------------------------------------------------------------
 
     /**
-     * Runs ML Kit face detection synchronously (using CountDownLatch) and
+     * Runs ML Kit face detection synchronously with a bounded wait and
      * returns a 112×112 aligned crop, or null if no face is found.
      *
      * ML Kit's bundled detector (com.google.mlkit:face-detection) does NOT
      * download any model at runtime — it ships fully inside the AAR.
      */
-    private fun detectAndAlign(bitmap: Bitmap, label: String): Bitmap? {
+    private fun detectAndAlign(bitmap: Bitmap): Bitmap? {
         val image = InputImage.fromBitmap(bitmap, 0)
-        var alignedCrop: Bitmap? = null
-        val latch = CountDownLatch(1)
-
-        detector.process(image)
-            .addOnSuccessListener { faces ->
-                if (faces.isNotEmpty()) {
-                    // Use the largest detected face (most prominent in frame)
-                    val face = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }!!
-                    val widthPercent = (face.boundingBox.width().toFloat() / bitmap.width.toFloat()) * 100f
-                    Log.d(TAG, "[$label] Face detected. Bounding box width is $widthPercent% of the full image width.")
-                    alignedCrop = alignmentHelper.cropAndAlign(bitmap, face)
-                } else {
-                    Log.d(TAG, "[$label] No face detected.")
-                }
-                latch.countDown()
-            }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "[$label] ML Kit detection failed: ${e.message}")
-                latch.countDown()
-            }
-
-        latch.await()
-        return alignedCrop
+        val faces = Tasks.await(detector.process(image), 15, TimeUnit.SECONDS)
+        val face = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
+            ?: return null
+        return alignmentHelper.cropAndAlign(bitmap, face)
     }
 
     /**
