@@ -1,7 +1,7 @@
 STATUS: DEPLOYED AND VERIFIED.
 
 The synthetic reference face image (synthetic_reference_face.jpg, 512×512 px)
-is placed in this directory (ignored by git, bundled into APK at build time).
+is placed in this directory (tracked in git, bundled into APK at build time).
 
 Source:
   AI-generated synthetic frontal ID portrait (diffusion synthesis, fictional person).

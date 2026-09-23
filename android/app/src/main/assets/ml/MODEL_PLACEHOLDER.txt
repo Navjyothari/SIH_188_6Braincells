@@ -1,7 +1,7 @@
 STATUS: DEPLOYED AND VERIFIED.
 
 The MobileFaceNet TFLite model file (mobilefacenet.tflite, 5.2 MB)
-is placed in this directory (ignored by git, bundled into APK at build time).
+is placed in this directory (tracked in git, bundled into APK at build time).
 
 License: BSD-3-Clause (attribution in THIRD_PARTY_LICENSES.txt)
 Source:  https://github.com/MCarlomagno/FaceRecognitionAuth

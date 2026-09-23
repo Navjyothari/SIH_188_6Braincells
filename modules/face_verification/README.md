@@ -157,15 +157,19 @@ No other file needs to change. The core document-screening flow is unaffected.
 
 ---
 
-## Model setup (before first build)
+## Bundled model assets
 
-1. Obtain `mobilefacenet.tflite` (BSD-3-Clause):
-   - Pretrained model from https://github.com/MCarlomagno/FaceRecognitionAuth
-   - Copy to: `android/app/src/main/assets/ml/mobilefacenet.tflite`
-2. Place a synthetic reference face at:
-   - `android/app/src/main/assets/ml/synthetic_reference_face.jpg` (AI-generated 512×512 px frontal portrait)
-3. Both assets are ignored by `.gitignore` and bundled into the APK at build time.
-4. Build: `./gradlew assembleDebug`
+The tested `mobilefacenet.tflite` and `synthetic_reference_face.jpg` are tracked in
+`android/app/src/main/assets/ml/` and included in APK builds. A fresh checkout
+includes both files; no manual download or generation is required.
+
+Verify their hashes against `android/app/src/main/assets/ml/SHA256SUMS` before
+replacing either asset. The model has float32 input `[1,112,112,3]` and output
+`[1,192]`. The existing `scripts/mobilefacenet_to_tflite.py` creates a random-weight
+128-dimensional placeholder and must not be used to reproduce or overwrite this
+trained-model candidate. See `THIRD_PARTY_LICENSES.txt` and `docs/claims-register.md`
+for the recorded source/licensing claims; committing the assets does not establish
+model accuracy or independently verify those claims.
 
 ---
 
@@ -188,8 +192,8 @@ No other file needs to change. The core document-screening flow is unaffected.
 ```
 android/app/src/main/
 ├── assets/ml/
-│   ├── mobilefacenet.tflite           ← bundled model (add before build)
-│   └── synthetic_reference_face.jpg   ← bundled synthetic ref (add before build)
+│   ├── mobilefacenet.tflite           ← bundled model (tracked)
+│   └── synthetic_reference_face.jpg   ← bundled synthetic ref (tracked)
 └── kotlin/com/sih188/borderdoc/
     ├── MainActivity.kt                ← registers MethodChannel
     └── face/

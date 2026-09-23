@@ -8,7 +8,7 @@ The helper now orders eyes by their image coordinates after EXIF normalization a
 
 Regression coverage includes translated, scaled, rolled and reversed eye inputs; invalid landmarks; actual JPEG decoding for all eight EXIF orientations; and the bundled detector/model comparing the synthetic portrait against itself at a different position in a larger image. These tests establish preprocessing behavior, not population-level face accuracy. They do not access the user's face captures.
 
-The supplied model is bundled locally, SHA-256 be4bc7cfc53f7bc336d0f28b1ab92535f618c913a422b683210750f6b5354854. Assets remain ignored by Git.
+The supplied model is bundled locally, SHA-256 be4bc7cfc53f7bc336d0f28b1ab92535f618c913a422b683210750f6b5354854. The supplied model and synthetic reference are now tracked in Git for reproducible builds.
 
 Retest with a new document and live capture. Existing debug thumbnails and scores were produced by the old preprocessing and are not recomputed. A remaining mismatch after correct crops still requires evaluation; the change does not promise a MATCH or validate the existing thresholds.
 

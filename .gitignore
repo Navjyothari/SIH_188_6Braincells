@@ -17,10 +17,7 @@ android/*.keystore
 android/key.properties
 *.jks
 
-# Model files — do not commit large binaries to git
-# Place these manually per MODEL_PLACEHOLDER.txt
-android/app/src/main/assets/ml/*.tflite
-android/app/src/main/assets/ml/*.jpg
+# Bundled TFLite model and synthetic reference JPEG are tracked.
 android/app/src/main/assets/ml/*.png
 
 # Test-only fixtures and candidate assets
