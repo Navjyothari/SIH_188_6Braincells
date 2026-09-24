@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AndroidManifest.xml — BorderDoc App
+    =====================================
+    This manifest registers:
+      - Camera hardware feature (required by face verification + document capture)
+      - CAMERA permission (live selfie + document capture)
+      - READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE for image_picker on Android < 13
+      - FlutterActivity as the sole activity entry point
+
+    NOTE: These permissions are declared here. The Flutter app will request them
+    at runtime using the `permission_handler` or `camera` package flow.
+    Declaring them here does NOT grant them — the user must accept at runtime.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.sih188.borderdoc">
+
+    <!-- ===================================================================
+         Camera permissions — required for:
+           1. document_capture_screen.dart (rear camera, via image_picker)
+           2. live_selfie_capture_screen.dart (front camera, via camera pkg)
+         CAMERA is a dangerous permission; the app requests it at runtime.
+    ==================================================================== -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- ===================================================================
+         Storage permissions — required by image_picker to save JPEG captures
+         to a temp path that can be passed as a file:// URI to the Kotlin side.
+         On Android 13+, READ_MEDIA_IMAGES replaces READ_EXTERNAL_STORAGE.
+    ==================================================================== -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+    <!-- Android 13+ granular media permission -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Camera hardware feature declaration — marks this as a camera-required app.
+         required="false" lets the APK install on devices that report no camera
+         (e.g. some emulators); the app will handle absence gracefully. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <application
+        android:label="@string/app_name"
+        android:name="${applicationName}"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:allowBackup="false"
+        android:theme="@style/LaunchTheme"
+        android:hardwareAccelerated="true"
+        android:supportsRtl="true">
+
+        <!-- ===============================================================
+             FlutterActivity — the sole entry point.
+             io.flutter.embedding.android.FlutterActivity is provided by
+             the Flutter engine AAR bundled via pubspec.yaml / Gradle.
+
+             configChanges: prevent activity restarts on orientation change
+             or keyboard show/hide — Flutter handles these itself.
+             windowSoftInputMode: handled by Flutter's keyboard avoidance.
+        ================================================================ -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+
+            <!-- This keeps the splash screen on while Flutter initialises. -->
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme" />
+
+            <!-- Required for `flutter run` and `flutter attach` to work. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Don't delete the FlutterActivity metadata — needed by the engine. -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
+    </application>
+</manifest>

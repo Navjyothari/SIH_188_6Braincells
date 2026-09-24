@@ -1,0 +1,57 @@
+name: borderdoc
+description: >
+  AI-powered offline border document screening prototype (SIH26188).
+  Face verification module M3 — experimental, offline-only, removable.
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # -----------------------------------------------------------------------
+  # camera: ^0.10.5+9
+  #   Live camera preview with explicit CameraDescription selection,
+  #   used by LiveSelfieCaptureScreen to open the FRONT-facing camera.
+  #   Unlike image_picker, this gives us a live preview widget so the
+  #   officer can see the person before capturing.
+  # -----------------------------------------------------------------------
+  camera: ^0.10.5+9
+
+  # -----------------------------------------------------------------------
+  # image_picker: ^1.0.4
+  #   Used in DocumentCaptureScreen (rear camera, one-shot capture).
+  #   Already referenced in existing face_verification_widget.dart.
+  # -----------------------------------------------------------------------
+  image_picker: ^1.0.4
+
+  # -----------------------------------------------------------------------
+  # path_provider: ^2.1.1
+  #   Provides getTemporaryDirectory() so camera captures can be saved
+  #   to a temp path and passed as file paths to the Kotlin channel.
+  # -----------------------------------------------------------------------
+  path_provider: ^2.1.1
+
+  # -----------------------------------------------------------------------
+  # path: ^1.8.3
+  #   Utilities for joining file paths (path.join).
+  # -----------------------------------------------------------------------
+  path: ^1.8.3
+
+  # -----------------------------------------------------------------------
+  # provider: ^6.1.1
+  #   ChangeNotifierProvider for ScreeningSession state management.
+  # -----------------------------------------------------------------------
+  provider: ^6.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
