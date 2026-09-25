@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 
 /** Serialized, fail-closed EdgeFace pipeline. No reference fallback or inherited thresholds. */
 class FaceVerificationModule(private val context: Context) : AutoCloseable {
-    companion object { const val MODEL_VERSION="edgeface-s-gamma-05/pending" }
+    companion object { const val MODEL_VERSION="edgeface_s_gamma_05-ce86851cfc37" }
     private var runner: EdgeFaceEmbeddingRunner?=null
     private var closed=false
     private val detector=FaceDetection.getClient(FaceDetectorOptions.Builder()

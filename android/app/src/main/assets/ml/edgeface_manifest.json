@@ -1,11 +1,37 @@
 {
   "modelId": "edgeface-s-gamma-05",
-  "modelVersion": "edgeface-s-gamma-05/pending",
+  "modelVersion": "edgeface_s_gamma_05-ce86851cfc37",
+  "sourceRepository": "https://github.com/otroshi/edgeface",
+  "sourceCommit": "ce86851cfc37979a9cd2558598d0e9bc592cbba3",
+  "sourceCheckpoint": "https://github.com/otroshi/edgeface/blob/ce86851cfc37979a9cd2558598d0e9bc592cbba3/checkpoints/edgeface_s_gamma_05.pt",
+  "sourceCheckpointSha256": "dc59abda2e8580399fd115a1eeb07e1f21156196db604b884407bcf0f17efb07",
+  "onnxSha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+  "conversionCommand": [
+    "ml/edgeface/export_model.py",
+    "--model",
+    "edgeface_s_gamma_05",
+    "--source",
+    "release-assets/edgeface-source",
+    "--commit",
+    "ce86851cfc37979a9cd2558598d0e9bc592cbba3",
+    "--checkpoint",
+    "release-assets/edgeface-source/checkpoints/edgeface_s_gamma_05.pt",
+    "--checkpoint-sha256",
+    "dc59abda2e8580399fd115a1eeb07e1f21156196db604b884407bcf0f17efb07",
+    "--checkpoint-url",
+    "https://github.com/otroshi/edgeface/blob/ce86851cfc37979a9cd2558598d0e9bc592cbba3/checkpoints/edgeface_s_gamma_05.pt",
+    "--aligned-image",
+    "release-assets/edgeface-s/synthetic-aligned.png",
+    "--output",
+    "release-assets/edgeface-s"
+  ],
+  "torchVersion": "2.7.1+cpu",
+  "onnxVersion": "1.18.0",
+  "onnxruntimeVersion": "1.22.0",
   "redistributionStatus": "pending",
-  "codeLicense": "BSD-3-Clause",
-  "weightsLicenseStatus": "pending",
+  "weightsLicenseStatus": "publisher-declares-CC-BY-NC-SA-4.0",
   "trainingDataTermsStatus": "pending",
-  "onnxSha256": "pending",
+  "codeLicense": "BSD-3-Clause",
   "alignmentVersion": "five-point-similarity-bilinear-v1",
   "input": {
     "name": "input",
@@ -25,5 +51,25 @@
       512
     ],
     "dtype": "float32"
-  }
+  },
+  "desktopParity": [
+    {
+      "cosine": 0.9999999999918976,
+      "max_absolute_normalized_error": 6.186969941299192e-07
+    },
+    {
+      "cosine": 0.9999999999976801,
+      "max_absolute_normalized_error": 2.7288566927310964e-07
+    },
+    {
+      "cosine": 0.9999999999812395,
+      "max_absolute_normalized_error": 2.01065515137433e-06
+    },
+    {
+      "cosine": 0.9999999999590103,
+      "max_absolute_normalized_error": 4.4029987526506e-06
+    }
+  ],
+  "faceFixtureSha256": "5a05fb005ad856cc2a45d12cc3011f23d88eacc03427d3d60f8929d8dd7e5976",
+  "weightsLicenseSource": "https://huggingface.co/Idiap/EdgeFace-S-GAMMA"
 }

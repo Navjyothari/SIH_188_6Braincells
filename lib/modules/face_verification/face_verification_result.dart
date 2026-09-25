@@ -27,7 +27,7 @@ class FaceVerificationResult {
 
   factory FaceVerificationResult.notRun() => const FaceVerificationResult(
       status: FaceVerificationStatus.notRun,
-      modelVersion: 'edgeface-s-gamma-05/pending');
+      modelVersion: 'edgeface_s_gamma_05-ce86851cfc37');
   factory FaceVerificationResult.skippedByOfficer() =>
       const FaceVerificationResult(
           status: FaceVerificationStatus.notRun,
