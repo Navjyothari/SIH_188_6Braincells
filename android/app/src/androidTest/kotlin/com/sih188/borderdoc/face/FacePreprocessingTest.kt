@@ -89,29 +89,19 @@ class FacePreprocessingTest {
         }
     }
 
-    @Test fun actualDetectorAndBundledModelComparePortraitAcrossCanvasOffsets() {
-        val portrait=context.assets.open("ml/synthetic_reference_face.jpg").use {
-            BitmapFactory.decodeStream(it)
+    @Test fun missingDocumentNeverUsesBundledReference() {
+        FaceVerificationModule(context).use { module ->
+            val result=module.verifyFace(null,listOf("missing-selfie.jpg"))
+            assertEquals("NOT_RUN",result.status)
+            assertEquals("DOCUMENT_REQUIRED",result.reasonCode)
+            assertNull(result.similarityScore)
         }
-        val canvasImage=Bitmap.createBitmap(900,1000,Bitmap.Config.ARGB_8888)
-        Canvas(canvasImage).apply {
-            drawColor(Color.WHITE)
-            drawBitmap(portrait,180f,220f,null)
-        }
-        val testCache=File(context.cacheDir,"synthetic-alignment-test-${System.nanoTime()}")
-        check(testCache.mkdir())
-        val testContext=object : android.content.ContextWrapper(context) {
-            override fun getCacheDir() = testCache
-        }
-        try {
-            val result=FaceVerificationModule(testContext).verifyFace(canvasImage,portrait)
-            assertEquals(result.debugInfo,"MATCH",result.status)
-            assertTrue(result.similarityScore!! >= 0.75f)
-            println("Synthetic offset comparison score: ${result.similarityScore}")
-        } finally {
-            File(testCache,"debug_live_crop.jpg").delete()
-            File(testCache,"debug_ref_crop.jpg").delete()
-            testCache.delete()
+    }
+    @Test fun unapprovedModelNeverProducesAVerdict() {
+        FaceVerificationModule(context).use { module ->
+            val result=module.verifyFace("missing-document.jpg",listOf("missing-selfie.jpg"))
+            assertEquals("NOT_RUN",result.status)
+            assertNull(result.similarityScore)
         }
     }
 }

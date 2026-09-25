@@ -3,195 +3,63 @@ package com.sih188.borderdoc.face
 import org.junit.Assert.*
 import org.junit.Test
 
-/**
- * Unit tests for the face verification module logic.
- * These tests cover the pure-Kotlin parts that don't need Android context:
- *   - Cosine similarity computation
- *   - Threshold verdict logic
- *   - Result serialisation
- *   - NOT_RUN contract
- */
 class FaceVerificationTest {
-
-    // -----------------------------------------------------------------------
-    // Cosine similarity via reflection (private helper, tested indirectly
-    // through a test-accessible wrapper below)
-    // -----------------------------------------------------------------------
-
-    // Test-accessible wrapper replicating the private cosineSimilarity logic
-    private fun cosine(a: FloatArray, b: FloatArray): Float {
-        var dot = 0f; var normA = 0f; var normB = 0f
-        for (i in a.indices) { dot += a[i]*b[i]; normA += a[i]*a[i]; normB += b[i]*b[i] }
-        val denom = Math.sqrt((normA * normB).toDouble()).toFloat()
-        return if (denom < 1e-8f) 0f else dot / denom
+    @Test fun cosineNormalizesAndRejectsInvalidVectors() {
+        assertEquals(1f,EdgeFaceMath.cosine(floatArrayOf(2f,4f),floatArrayOf(1f,2f)),1e-6f)
+        assertEquals(0f,EdgeFaceMath.cosine(floatArrayOf(1f,0f),floatArrayOf(0f,2f)),1e-6f)
+        for (bad in listOf(floatArrayOf(0f,0f),floatArrayOf(Float.NaN,1f),floatArrayOf(Float.POSITIVE_INFINITY,1f))) {
+            assertThrows(IllegalArgumentException::class.java) { EdgeFaceMath.cosine(bad,floatArrayOf(1f,2f)) }
+        }
     }
-
-    @Test fun `identical vectors have cosine similarity 1`() {
-        val v = FloatArray(192) { it.toFloat() + 1f }
-        assertEquals(1.0f, cosine(v, v), 1e-5f)
+    @Test fun thresholdsRequireApprovalAndExactModelAndAlignment() {
+        val policy=DecisionPolicy("hash",EdgeFaceMath.ALIGNMENT_VERSION,"test-only",0.2f,0.8f,true)
+        assertEquals("MATCH",policy.classify(0.8f,"hash"))
+        assertEquals("UNCERTAIN",policy.classify(0.2f,"hash"))
+        assertEquals("NO_MATCH",policy.classify(0.19f,"hash"))
+        assertThrows(IllegalArgumentException::class.java) { policy.classify(Float.NaN,"hash") }
+        assertThrows(IllegalArgumentException::class.java) { policy.classify(1f,"different") }
+        assertThrows(IllegalArgumentException::class.java) { policy.copy(approved=false).classify(1f,"hash") }
+        assertThrows(IllegalArgumentException::class.java) { policy.copy(match=0.1f).classify(1f,"hash") }
+        assertThrows(IllegalArgumentException::class.java) { policy.copy(alignment="old").classify(1f,"hash") }
     }
-
-    @Test fun `orthogonal vectors have cosine similarity 0`() {
-        val a = FloatArray(192) { if (it % 2 == 0) 1f else 0f }
-        val b = FloatArray(192) { if (it % 2 == 1) 1f else 0f }
-        assertEquals(0.0f, cosine(a, b), 1e-5f)
+    @Test fun transformRecoversScaleRotationTranslationFromAllFivePoints() {
+        val target=EdgeFaceMath.template
+        val source=DoubleArray(10)
+        for(i in 0..4) { val x=target[2*i]; val y=target[2*i+1]; source[2*i]=2*x-0.3*y+80; source[2*i+1]=0.3*x+2*y+20 }
+        val fit=EdgeFaceMath.fit(source)
+        for(i in 0..4) {
+            assertEquals(target[2*i],fit[0]*source[2*i]-fit[1]*source[2*i+1]+fit[2],1e-8)
+            assertEquals(target[2*i+1],fit[1]*source[2*i]+fit[0]*source[2*i+1]+fit[3],1e-8)
+        }
+        assertThrows(IllegalArgumentException::class.java) { EdgeFaceMath.fit(DoubleArray(10)) }
     }
-
-    @Test fun `opposite vectors have cosine similarity -1`() {
-        val v = FloatArray(192) { it.toFloat() + 1f }
-        val neg = FloatArray(192) { -(it.toFloat() + 1f) }
-        assertEquals(-1.0f, cosine(v, neg), 1e-5f)
+    @Test fun planarRgbOrderAndNormalizationAreExact() {
+        val red=IntArray(112*112) { 0xffff0000.toInt() }
+        val tensor=EdgeFaceMath.alignedTensor(red,112,112,EdgeFaceMath.template)
+        assertEquals(1f,tensor[56*112+56],1e-6f)
+        assertEquals(-1f,tensor[12544+56*112+56],1e-6f)
+        assertEquals(-1f,tensor[25088+56*112+56],1e-6f)
     }
-
-    @Test fun `zero vector returns 0 not NaN`() {
-        val zero = FloatArray(192) { 0f }
-        val v    = FloatArray(192) { 1f }
-        assertFalse(cosine(zero, v).isNaN())
-        assertEquals(0f, cosine(zero, v), 1e-5f)
+    @Test fun pythonGoldenPreprocessingMatchesKotlin() {
+        val pixels=IntArray(160*160) { i ->
+            val x=i%160; val y=i/160
+            (255 shl 24) or (((x*3+y)%256) shl 16) or (((y*5+x)%256) shl 8) or ((x*7+y*11)%256)
+        }
+        val points=EdgeFaceMath.template.mapIndexed { i,v -> v*1.1+if(i%2==0) 8 else 4 }.toDoubleArray()
+        val tensor=EdgeFaceMath.alignedTensor(pixels,160,160,points)
+        val bytes=javaClass.getResourceAsStream("/preprocessing-golden.f32")!!.readBytes()
+        val reference=java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asFloatBuffer()
+        assertEquals(tensor.size,reference.remaining())
+        tensor.forEach { assertEquals(reference.get(),it,2e-6f) }
     }
-
-
-    // -----------------------------------------------------------------------
-    // Threshold verdict logic
-    // -----------------------------------------------------------------------
-
-    private fun verdict(score: Float): String = when {
-        score >= FaceVerificationModule.THRESHOLD_MATCH     -> "MATCH"
-        score >= FaceVerificationModule.THRESHOLD_UNCERTAIN -> "UNCERTAIN"
-        else                                                 -> "NO_MATCH"
+    @Test fun failureResultsCannotCarryScoresOrFaceImages() {
+        val result=FaceVerificationResult.notRun("MODEL_UNAVAILABLE").toMap()
+        assertEquals("NOT_RUN",result["status"])
+        assertNull(result["similarityScore"])
+        assertFalse(result.keys.any { it.contains("crop",true) || it.contains("embedding",true) })
     }
-
-    @Test fun `score at THRESHOLD_MATCH boundary is MATCH`() {
-        assertEquals("MATCH", verdict(FaceVerificationModule.THRESHOLD_MATCH))
-    }
-
-    @Test fun `score just below THRESHOLD_MATCH is UNCERTAIN`() {
-        assertEquals("UNCERTAIN", verdict(FaceVerificationModule.THRESHOLD_MATCH - 0.001f))
-    }
-
-    @Test fun `score at THRESHOLD_UNCERTAIN boundary is UNCERTAIN`() {
-        assertEquals("UNCERTAIN", verdict(FaceVerificationModule.THRESHOLD_UNCERTAIN))
-    }
-
-    @Test fun `score just below THRESHOLD_UNCERTAIN is NO_MATCH`() {
-        assertEquals("NO_MATCH", verdict(FaceVerificationModule.THRESHOLD_UNCERTAIN - 0.001f))
-    }
-
-    @Test fun `high score gives MATCH`() {
-        assertEquals("MATCH", verdict(0.90f))
-    }
-
-    @Test fun `low score gives NO_MATCH`() {
-        assertEquals("NO_MATCH", verdict(0.30f))
-    }
-
-    // -----------------------------------------------------------------------
-    // NOT_RUN contract — must never produce a fake score
-    // -----------------------------------------------------------------------
-
-    @Test fun `NOT_RUN result has null similarity score`() {
-        val r = FaceVerificationResult.notRun()
-        assertEquals("NOT_RUN", r.status)
-        assertNull(r.similarityScore)
-        assertNull(r.thresholdUsed)
-        assertEquals(FaceVerificationModule.MODEL_VERSION, r.modelVersion)
-    }
-
-    @Test fun `NOT_RUN toMap contains required keys`() {
-        val map = FaceVerificationResult.notRun().toMap()
-        assertTrue(map.containsKey("status"))
-        assertTrue(map.containsKey("similarityScore"))
-        assertTrue(map.containsKey("thresholdUsed"))
-        assertTrue(map.containsKey("modelVersion"))
-        assertNull(map["similarityScore"])
-        assertNull(map["thresholdUsed"])
-    }
-
-    // -----------------------------------------------------------------------
-    // Result serialisation (toMap)
-    // -----------------------------------------------------------------------
-
-    @Test fun `MATCH result serialises correctly`() {
-        val r = FaceVerificationResult(
-            status          = "MATCH",
-            similarityScore = 0.82f,
-            thresholdUsed   = FaceVerificationModule.THRESHOLD_MATCH,
-            modelVersion    = FaceVerificationModule.MODEL_VERSION
-        )
-        val map = r.toMap()
-        assertEquals("MATCH", map["status"])
-        assertEquals(0.82f,   map["similarityScore"])
-        assertEquals(FaceVerificationModule.THRESHOLD_MATCH, map["thresholdUsed"])
-        assertEquals(FaceVerificationModule.MODEL_VERSION,   map["modelVersion"])
-    }
-
-    // -----------------------------------------------------------------------
-    // Alignment enforcement & encapsulation audit tests
-    // -----------------------------------------------------------------------
-
-    @Test
-    fun `embedding runner accepts canonical 112x112 aligned input dimensions`() {
-        // Must succeed without throwing
-        FaceEmbeddingRunner.validateInputDimensions(112, 112)
-        assertEquals(112, FaceEmbeddingRunner.INPUT_SIZE)
-        assertEquals(192, FaceEmbeddingRunner.EMBEDDING_SIZE)
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `embedding runner strictly rejects full-frame 1920x1080 camera dimensions`() {
-        FaceEmbeddingRunner.validateInputDimensions(1920, 1080)
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `embedding runner strictly rejects uncropped 512x512 reference face dimensions`() {
-        FaceEmbeddingRunner.validateInputDimensions(512, 512)
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `embedding runner strictly rejects sub-minimum 100x100 crop dimensions`() {
-        FaceEmbeddingRunner.validateInputDimensions(100, 100)
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `embedding runner strictly rejects non-square 112x110 crop dimensions`() {
-        FaceEmbeddingRunner.validateInputDimensions(112, 110)
-    }
-
-    @Test
-    fun `embedding runner is private and never exposed by public verification API`() {
-        // Verify that FaceVerificationModule exposes ONLY the safe public API methods
-        val publicMethods = FaceVerificationModule::class.java.methods
-            .filter { it.declaringClass == FaceVerificationModule::class.java }
-            .map { it.name }
-            .toSet()
-
-        val allowedPublicMethods = setOf("verifyFace", "isAvailable")
-        assertEquals(
-            "FaceVerificationModule must not expose internal components or bypass methods",
-            allowedPublicMethods,
-            publicMethods
-        )
-
-        // Verify that embeddingRunner is private in FaceVerificationModule
-        val fields = FaceVerificationModule::class.java.declaredFields
-        val runnerField = fields.find { it.name.contains("embeddingRunner") }
-        assertNotNull("embeddingRunner field must exist internally", runnerField)
-        assertTrue(
-            "embeddingRunner must be private to enforce that all inferences pass through detectAndAlign",
-            java.lang.reflect.Modifier.isPrivate(runnerField!!.modifiers)
-        )
-    }
-
-    @Test
-    fun `alignment failure contract requires NOT_RUN without fallback to raw frame`() {
-        // When alignment fails (no face found, low confidence, etc.):
-        // 1. status must be NOT_RUN
-        // 2. similarityScore must be null (never a fallback embedding on unaligned pixels)
-        // 3. thresholdUsed must be null
-        val result = FaceVerificationResult.notRun()
-        assertEquals("NOT_RUN", result.status)
-        assertNull("Similarity score must be null on alignment failure", result.similarityScore)
-        assertNull("Threshold must be null on alignment failure", result.thresholdUsed)
-        assertEquals(FaceVerificationModule.MODEL_VERSION, result.modelVersion)
+    @Test fun aggregationRejectsInvalidScores() {
+        assertEquals(0.4f,EdgeFaceMath.median(listOf(0.9f,0.1f,0.4f)),0f)
+        assertThrows(IllegalArgumentException::class.java) { EdgeFaceMath.median(listOf(Float.NaN)) }
     }
 }

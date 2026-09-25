@@ -8,11 +8,16 @@ import android.media.ExifInterface
 /** Decode pixels and apply all eight JPEG EXIF orientations exactly once. */
 internal object CaptureBitmapDecoder {
     fun decode(path: String): Bitmap? {
+        val file=java.io.File(path)
+        if(!file.isFile || file.length()>30L*1024*1024) return null
+        val bounds=BitmapFactory.Options().apply { inJustDecodeBounds=true }
+        BitmapFactory.decodeFile(path,bounds)
+        if(bounds.outWidth<=0 || bounds.outHeight<=0 || bounds.outWidth.toLong()*bounds.outHeight>12_000_000) return null
         val bitmap = BitmapFactory.decodeFile(path) ?: return null
         val orientation = try {
             ExifInterface(path).getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
         } catch (_: java.io.IOException) { 1 }
-        return orient(bitmap, orientation)
+        return orient(bitmap, orientation).also { if(it!==bitmap) bitmap.recycle() }
     }
 
     internal fun orient(bitmap: Bitmap, orientation: Int): Bitmap {

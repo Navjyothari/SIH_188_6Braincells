@@ -31,7 +31,8 @@ class OcrResult {
   final String? documentType;
   final Map<String, String> extractedFields;
   final List<String> flaggedRules;
-  final String state; // 'NO_INCONSISTENCY_DETECTED' | 'REVIEW_REQUIRED' | 'UNSUPPORTED' | 'RECAPTURE'
+  final String
+      state; // 'NO_INCONSISTENCY_DETECTED' | 'REVIEW_REQUIRED' | 'UNSUPPORTED' | 'RECAPTURE'
 
   const OcrResult({
     required this.isAvailable,

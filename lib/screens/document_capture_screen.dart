@@ -19,12 +19,12 @@
 //
 // After capture is confirmed, navigates to '/selfie'.
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../app/screening_session.dart';
+import 'dart:io';
 
 class DocumentCaptureScreen extends StatefulWidget {
   const DocumentCaptureScreen({super.key});
@@ -113,7 +113,8 @@ class _DocumentCaptureScreenState extends State<DocumentCaptureScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: const Color(0xFF238636),
                     foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    textStyle: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
@@ -141,7 +142,7 @@ class _DocumentCaptureScreenState extends State<DocumentCaptureScreen> {
     try {
       final picked = await _picker.pickImage(
         source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.rear,  // rear camera for document
+        preferredCameraDevice: CameraDevice.rear, // rear camera for document
         // -----------------------------------------------------------------
         // Image quality settings — deliberately NOT compressed aggressively.
         // maxWidth/maxHeight cap at 2048 to avoid huge files while keeping
@@ -178,7 +179,9 @@ class _DocumentCaptureScreenState extends State<DocumentCaptureScreen> {
   }
 
   void _retake() {
-    setState(() => _capturedPath = null);
+    setState(() {
+      _capturedPath = null;
+    });
   }
 
   void _confirmAndProceed() {
@@ -210,7 +213,8 @@ class _InstructionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const Icon(Icons.camera_alt_rounded, color: Color(0xFF58A6FF), size: 18),
+            const Icon(Icons.camera_alt_rounded,
+                color: Color(0xFF58A6FF), size: 18),
             const SizedBox(width: 8),
             Text(
               'Document Capture Instructions',
@@ -236,7 +240,8 @@ class _InstructionCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         e.value,
-                        style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                        style: TextStyle(
+                            color: Colors.grey.shade400, fontSize: 12),
                       ),
                     ),
                   ],
@@ -261,7 +266,9 @@ class _CapturePrompt extends StatelessWidget {
           color: const Color(0xFF161B22),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: const Color(0xFF30363D), width: 1.5, style: BorderStyle.solid),
+              color: const Color(0xFF30363D),
+              width: 1.5,
+              style: BorderStyle.solid),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -292,36 +299,15 @@ class _CapturePreview extends StatelessWidget {
   final String imagePath;
   final VoidCallback onRetake;
   const _CapturePreview({required this.imagePath, required this.onRetake});
-
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.file(
-            File(imagePath),
-            fit: BoxFit.contain,
-          ),
-        ),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: TextButton.icon(
-            onPressed: onRetake,
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Retake'),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.black54,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Stack(fit: StackFit.expand, children: [
+    ClipRRect(borderRadius: BorderRadius.circular(12),
+      child: Image.file(File(imagePath), fit: BoxFit.contain)),
+    Positioned(top: 12, right: 12, child: TextButton.icon(
+      onPressed: onRetake, icon: const Icon(Icons.refresh_rounded, size: 18),
+      label: const Text('Retake'), style: TextButton.styleFrom(
+        backgroundColor: Colors.black54, foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))))),
+  ]);
 }

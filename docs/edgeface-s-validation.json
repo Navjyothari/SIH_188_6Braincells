@@ -1,0 +1,550 @@
+{
+  "date": "2026-09-24",
+  "modelId": "edgeface-s-gamma-05",
+  "sourceCommit": "ce86851cfc37979a9cd2558598d0e9bc592cbba3",
+  "checkpointSha256": "dc59abda2e8580399fd115a1eeb07e1f21156196db604b884407bcf0f17efb07",
+  "onnxSha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+  "onnxBytes": 14776267,
+  "desktop": {
+    "status": "passed",
+    "python": "3.10.19",
+    "torch": "2.7.1+cpu",
+    "onnx": "1.18.0",
+    "onnxruntime": "1.22.0",
+    "cases": [
+      "officially-aligned-synthetic-face",
+      "RGB-pattern",
+      "zero-input",
+      "seeded-random-input"
+    ],
+    "measurements": [
+      {
+        "cosine": 0.9999999999918976,
+        "max_absolute_normalized_error": 6.186969941299192e-07
+      },
+      {
+        "cosine": 0.9999999999976801,
+        "max_absolute_normalized_error": 2.7288566927310964e-07
+      },
+      {
+        "cosine": 0.9999999999812395,
+        "max_absolute_normalized_error": 2.01065515137433e-06
+      },
+      {
+        "cosine": 0.9999999999590103,
+        "max_absolute_normalized_error": 4.4029987526506e-06
+      }
+    ]
+  },
+  "phone": {
+    "model": "OnePlus Nord CE4 / CPH2613",
+    "android": "16",
+    "status": "passed-local-numerical-and-preprocessing-tests",
+    "instrumentationTests": 7,
+    "failures": 0,
+    "scope": "Debug CPU execution with checkpoint in instrumentation APK only; no match/no-match thresholds.",
+    "measurements": {
+      "desktopCosine": 1.0,
+      "maxAbsoluteNormalizedError": 2.30968e-07,
+      "startupAndWarmupMs": 875.893958,
+      "warmEmbeddingP50Ms": 46.805,
+      "warmEmbeddingP95Ms": 125.870364,
+      "warmEmbeddingRuns": 20,
+      "syntheticMlKitVsOfficialAlignmentCosine": 0.98954505
+    },
+    "measurementLimits": "Single debug CPU run; embedding timing excludes decoding/detection/alignment. Alignment cosine is one fictional portrait, not population accuracy evidence. Separate metrics rerun passed both S tests."
+  },
+  "limits": [
+    "Numerical conversion correctness only; no recognition accuracy established.",
+    "Production model redistribution and thresholds remain unapproved.",
+    "XS has not been evaluated."
+  ],
+  "capturedPairAttempts": [
+    {
+      "date": "2026-09-24",
+      "device": "OnePlus Nord CE4 / CPH2613",
+      "synthetic": false,
+      "qualityStatus": "RECAPTURE",
+      "reason": "document_NO_FACE",
+      "identityVerdict": "NOT_RUN",
+      "startupAndWarmupMs": 632.101041,
+      "scope": "Document detector found no face. Selfie processing and repeated pair timing were not reached. Harness completed, but this is not a successful pair validation. No photos or capture paths copied into this report."
+    },
+    {
+      "identityVerdict": "NOT_RUN",
+      "purpose": "capture-quality-and-timing-only",
+      "synthetic": false,
+      "model": "edgeface_s_gamma_05-ce86851cfc37",
+      "sha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+      "startupAndWarmupMs": 427.785885,
+      "firstPair": {
+        "document": {
+          "decodeMs": 58.311198,
+          "detectMs": 1590.718802,
+          "faces": 1,
+          "width": 1536,
+          "height": 2048,
+          "alignAndQualityMs": 129.26625,
+          "embedMs": 78.333177
+        },
+        "selfie": {
+          "decodeMs": 46.281354,
+          "detectMs": 381.942917,
+          "faces": 1,
+          "width": 720,
+          "height": 1280,
+          "alignAndQualityMs": 85.798073,
+          "embedMs": 36.474114
+        },
+        "totalMs": 2412.499374
+      },
+      "qualityStatus": "ACCEPTED_BY_PROVISIONAL_GATES",
+      "warmPairP50Ms": 1966.244582,
+      "warmPairP95Ms": 2133.871562,
+      "runs": 20,
+      "date": "2026-09-24",
+      "device": "OnePlus Nord CE4 / CPH2613",
+      "scope": "One newly captured pair, debug CPU, one document plus one live photo. Twenty repeated runs of the same files; no identity accuracy, population quality, or lower-end hardware claim. Startup excluded from pair timings; capture/UI time excluded."
+    }
+  ],
+  "detectorSizingExperiments": {
+    "date": "2026-09-24",
+    "device": "OnePlus Nord CE4 / CPH2613",
+    "cases": [
+      {
+        "identityVerdict": "NOT_RUN",
+        "detectionMaxEdge": 1024,
+        "purpose": "capture-quality-and-timing-only",
+        "synthetic": false,
+        "model": "edgeface_s_gamma_05-ce86851cfc37",
+        "sha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+        "startupAndWarmupMs": 413.328646,
+        "fullResolutionReferencePair": {
+          "document": {
+            "decodeMs": 46.604636,
+            "detectMs": 1653.403958,
+            "detectionWidth": 1536,
+            "detectionHeight": 2048,
+            "faces": 1,
+            "width": 1536,
+            "height": 2048,
+            "alignAndQualityMs": 112.114531,
+            "embedMs": 63.615104
+          },
+          "selfie": {
+            "decodeMs": 58.145834,
+            "detectMs": 334.152239,
+            "detectionWidth": 720,
+            "detectionHeight": 1280,
+            "faces": 1,
+            "width": 720,
+            "height": 1280,
+            "alignAndQualityMs": 65.559843,
+            "embedMs": 29.909114
+          },
+          "totalMs": 2369.43276
+        },
+        "status": "rejected-alignment-drift",
+        "documentEmbeddingCosineToFullResolution": 0.95242155,
+        "requiredMinimumCosine": 0.98,
+        "productionEnabled": false
+      },
+      {
+        "identityVerdict": "NOT_RUN",
+        "detectionMaxEdge": 1536,
+        "purpose": "capture-quality-and-timing-only",
+        "synthetic": false,
+        "model": "edgeface_s_gamma_05-ce86851cfc37",
+        "sha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+        "startupAndWarmupMs": 399.285625,
+        "fullResolutionReferencePair": {
+          "document": {
+            "decodeMs": 46.009219,
+            "detectMs": 1196.413125,
+            "detectionWidth": 1536,
+            "detectionHeight": 2048,
+            "faces": 1,
+            "width": 1536,
+            "height": 2048,
+            "alignAndQualityMs": 106.141198,
+            "embedMs": 76.867083
+          },
+          "selfie": {
+            "decodeMs": 31.73974,
+            "detectMs": 301.20349,
+            "detectionWidth": 720,
+            "detectionHeight": 1280,
+            "faces": 1,
+            "width": 720,
+            "height": 1280,
+            "alignAndQualityMs": 66.313594,
+            "embedMs": 34.751198
+          },
+          "totalMs": 1865.456822
+        },
+        "status": "rejected-alignment-drift",
+        "documentEmbeddingCosineToFullResolution": 0.95175564,
+        "requiredMinimumCosine": 0.98,
+        "productionEnabled": false
+      },
+      {
+        "identityVerdict": "NOT_RUN",
+        "detectionMaxEdge": 1920,
+        "purpose": "capture-quality-and-timing-only",
+        "synthetic": false,
+        "model": "edgeface_s_gamma_05-ce86851cfc37",
+        "sha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+        "startupAndWarmupMs": 435.297969,
+        "fullResolutionReferencePair": {
+          "document": {
+            "decodeMs": 58.142396,
+            "detectMs": 1516.818385,
+            "detectionWidth": 1536,
+            "detectionHeight": 2048,
+            "faces": 1,
+            "width": 1536,
+            "height": 2048,
+            "alignAndQualityMs": 129.628854,
+            "embedMs": 77.820416
+          },
+          "selfie": {
+            "decodeMs": 40.761875,
+            "detectMs": 382.718125,
+            "detectionWidth": 720,
+            "detectionHeight": 1280,
+            "faces": 1,
+            "width": 720,
+            "height": 1280,
+            "alignAndQualityMs": 86.342187,
+            "embedMs": 34.186094
+          },
+          "totalMs": 2332.238853
+        },
+        "status": "rejected-alignment-drift",
+        "documentEmbeddingCosineToFullResolution": 0.95339614,
+        "requiredMinimumCosine": 0.98,
+        "productionEnabled": false
+      }
+    ],
+    "conclusion": "All three detector downscales rejected on the document image. Production continues full-resolution detection. Repeated timing was intentionally not completed after parity failure."
+  },
+  "alignmentOptimizationVerification": {
+    "changes": [
+      "Read each bilinear neighbor pixel once and reuse across RGB channels; preserve arithmetic.",
+      "Cache fixed quality region indices."
+    ],
+    "kotlinUnitTests": 7,
+    "phoneRegressionTests": 7,
+    "regressionFailures": 0,
+    "debugAndMinifiedReleaseBuild": "passed",
+    "capturedPair": {
+      "identityVerdict": "NOT_RUN",
+      "detectionMaxEdge": 0,
+      "purpose": "capture-quality-and-timing-only",
+      "synthetic": false,
+      "model": "edgeface_s_gamma_05-ce86851cfc37",
+      "sha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+      "startupAndWarmupMs": 1007.419323,
+      "alignmentCosinesToFullResolution": {},
+      "firstPair": {
+        "document": {
+          "decodeMs": 52.789636,
+          "detectMs": 1185.148593,
+          "detectionWidth": 1536,
+          "detectionHeight": 2048,
+          "faces": 1,
+          "width": 1536,
+          "height": 2048,
+          "alignAndQualityMs": 99.189532,
+          "embedMs": 57.737395
+        },
+        "selfie": {
+          "decodeMs": 55.737656,
+          "detectMs": 568.708229,
+          "detectionWidth": 720,
+          "detectionHeight": 1280,
+          "faces": 1,
+          "width": 720,
+          "height": 1280,
+          "alignAndQualityMs": 70.321094,
+          "embedMs": 24.799271
+        },
+        "totalMs": 2122.296145
+      },
+      "qualityStatus": "ACCEPTED_BY_PROVISIONAL_GATES",
+      "warmPairP50Ms": 1368.573958,
+      "warmPairP95Ms": 1788.34052,
+      "runs": 20,
+      "date": "2026-09-24",
+      "device": "OnePlus Nord CE4 / CPH2613",
+      "status": "passed-same-pair-full-resolution-rerun",
+      "scope": "Debug CPU; same previously captured pair, 20 repeats, no identity score or verdict. Capture/UI time excluded. Device state is uncontrolled: do not attribute all timing improvement to code or generalize to lower-end devices or three live photos.",
+      "startupPlusFirstPairMs": 3129.715468
+    },
+    "releaseGates": "Still pending licence approval, held-out thresholds, actual shipped-model parity and representative lower-end validation."
+  },
+  "startupRequirementUpdate": {
+    "date": "2026-09-24",
+    "userAcceptsApproximateColdSeconds": 3,
+    "warmTargetSeconds": 2,
+    "note": "No new hard cold-start maximum specified."
+  },
+  "sustainedThreeLiveWorkload": {
+    "identityVerdict": "NOT_RUN",
+    "liveCopies": 3,
+    "reusesSameLivePhoto": true,
+    "sustainSeconds": 300,
+    "detectionMaxEdge": 0,
+    "purpose": "capture-quality-and-timing-only",
+    "synthetic": false,
+    "processMemorySamples": [
+      {
+        "phase": "before-model",
+        "elapsedMs": 8375639,
+        "totalPssKb": 62557,
+        "nativeHeapAllocatedBytes": 8661064,
+        "javaHeapUsedBytes": 7836544,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "model-loaded",
+        "elapsedMs": 8376686,
+        "totalPssKb": 141221,
+        "nativeHeapAllocatedBytes": 50745240,
+        "javaHeapUsedBytes": 38269824,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "initial-5",
+        "elapsedMs": 8395941,
+        "totalPssKb": 264186,
+        "nativeHeapAllocatedBytes": 238455968,
+        "javaHeapUsedBytes": 7316352,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "initial-10",
+        "elapsedMs": 8410390,
+        "totalPssKb": 264519,
+        "nativeHeapAllocatedBytes": 238446312,
+        "javaHeapUsedBytes": 7119744,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "initial-15",
+        "elapsedMs": 8424755,
+        "totalPssKb": 259255,
+        "nativeHeapAllocatedBytes": 238356680,
+        "javaHeapUsedBytes": 3433344,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "initial-20",
+        "elapsedMs": 8440102,
+        "totalPssKb": 257713,
+        "nativeHeapAllocatedBytes": 238371016,
+        "javaHeapUsedBytes": 3445632,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "sustained-10",
+        "elapsedMs": 8473717,
+        "totalPssKb": 260438,
+        "nativeHeapAllocatedBytes": 238452440,
+        "javaHeapUsedBytes": 7324544,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "sustained-20",
+        "elapsedMs": 8512226,
+        "totalPssKb": 257384,
+        "nativeHeapAllocatedBytes": 238505592,
+        "javaHeapUsedBytes": 7324544,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "sustained-30",
+        "elapsedMs": 8542392,
+        "totalPssKb": 254563,
+        "nativeHeapAllocatedBytes": 238526920,
+        "javaHeapUsedBytes": 7320448,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "sustained-40",
+        "elapsedMs": 8574087,
+        "totalPssKb": 254570,
+        "nativeHeapAllocatedBytes": 238543208,
+        "javaHeapUsedBytes": 7320448,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "sustained-50",
+        "elapsedMs": 8604168,
+        "totalPssKb": 254572,
+        "nativeHeapAllocatedBytes": 238523400,
+        "javaHeapUsedBytes": 7320448,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "sustained-60",
+        "elapsedMs": 8633744,
+        "totalPssKb": 254524,
+        "nativeHeapAllocatedBytes": 238489032,
+        "javaHeapUsedBytes": 7324544,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "sustained-70",
+        "elapsedMs": 8661125,
+        "totalPssKb": 254494,
+        "nativeHeapAllocatedBytes": 238490744,
+        "javaHeapUsedBytes": 7320448,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "after-sustained-5",
+        "elapsedMs": 8697739,
+        "totalPssKb": 249876,
+        "nativeHeapAllocatedBytes": 238509400,
+        "javaHeapUsedBytes": 3437440,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "after-sustained-10",
+        "elapsedMs": 8714420,
+        "totalPssKb": 262384,
+        "nativeHeapAllocatedBytes": 239032376,
+        "javaHeapUsedBytes": 13263744,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "after-sustained-15",
+        "elapsedMs": 8742929,
+        "totalPssKb": 256619,
+        "nativeHeapAllocatedBytes": 238836088,
+        "javaHeapUsedBytes": 7508864,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "after-sustained-20",
+        "elapsedMs": 8761812,
+        "totalPssKb": 253955,
+        "nativeHeapAllocatedBytes": 238917656,
+        "javaHeapUsedBytes": 3621760,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "before-model-close",
+        "elapsedMs": 8761848,
+        "totalPssKb": 253959,
+        "nativeHeapAllocatedBytes": 238910744,
+        "javaHeapUsedBytes": 3621760,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "after-model-close",
+        "elapsedMs": 8761906,
+        "totalPssKb": 255511,
+        "nativeHeapAllocatedBytes": 180687152,
+        "javaHeapUsedBytes": 3621760,
+        "thermalStatus": 2
+      }
+    ],
+    "model": "edgeface_s_gamma_05-ce86851cfc37",
+    "sha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
+    "startupAndWarmupMs": 1007.407812,
+    "alignmentCosinesToFullResolution": {},
+    "firstPair": {
+      "document": {
+        "decodeMs": 87.341354,
+        "detectMs": 2424.663384,
+        "detectionWidth": 1536,
+        "detectionHeight": 2048,
+        "faces": 1,
+        "width": 1536,
+        "height": 2048,
+        "alignAndQualityMs": 83.71625,
+        "embedMs": 68.288177
+      },
+      "selfie1": {
+        "decodeMs": 42.463021,
+        "detectMs": 508.367188,
+        "detectionWidth": 720,
+        "detectionHeight": 1280,
+        "faces": 1,
+        "width": 720,
+        "height": 1280,
+        "alignAndQualityMs": 72.496667,
+        "embedMs": 53.830052
+      },
+      "selfie2": {
+        "decodeMs": 41.274792,
+        "detectMs": 750.47776,
+        "detectionWidth": 720,
+        "detectionHeight": 1280,
+        "faces": 1,
+        "width": 720,
+        "height": 1280,
+        "alignAndQualityMs": 17.390261,
+        "embedMs": 36.98302
+      },
+      "selfie3": {
+        "decodeMs": 35.405104,
+        "detectMs": 452.89901,
+        "detectionWidth": 720,
+        "detectionHeight": 1280,
+        "faces": 1,
+        "width": 720,
+        "height": 1280,
+        "alignAndQualityMs": 9.765156,
+        "embedMs": 35.171042
+      },
+      "totalMs": 4730.267758
+    },
+    "sustainedAdditionalRuns": 78,
+    "afterSustainedP50Ms": 3193.200051,
+    "afterSustainedP95Ms": 5856.124581,
+    "afterSustainedRuns": 20,
+    "sustainedAndFinalBatchMs": 380397,
+    "qualityStatus": "ACCEPTED_BY_PROVISIONAL_GATES",
+    "warmPairP50Ms": 2858.532551,
+    "warmPairP95Ms": 3194.286353,
+    "runs": 20,
+    "date": "2026-09-24",
+    "device": "OnePlus Nord CE4 / CPH2613",
+    "totalComparisons": 119,
+    "scope": "Debug instrumentation, one existing document plus three processing passes of the same live photo. Not three independent captures; no camera UI, identity scoring or aggregation timing. No raw images or embeddings exported. Memory sampled between iterations, not a peak measurement or proof of no leaks.",
+    "memorySummary": {
+      "minSampledWarmPssMiB": 244.01953125,
+      "maxSampledWarmPssMiB": 258.3193359375,
+      "observedThermalStatusCodes": [
+        1,
+        2
+      ],
+      "interpretation": "No monotonic process-PSS growth visible in this limited run. Device thermal status varied; causation of latency changes is not isolated."
+    },
+    "outcome": "Functional workload completed; two-second warm p95 target FAILED for three-live processing both initially and after sustained use. Current one-live capture flow remains baseline; its earlier short benchmark does not establish sustained latency."
+  },
+  "manualCameraChecks": {
+    "date": "2026-09-24",
+    "device": "OnePlus Nord CE4",
+    "evidence": "User reported everything worked",
+    "passed": [
+      "Home/background then return resumes live preview",
+      "capture after return",
+      "retake",
+      "skip face verification"
+    ],
+    "notVerified": [
+      "rotation",
+      "other devices"
+    ]
+  },
+  "pilotToolReadiness": {
+    "date": "2026-09-24",
+    "androidSyntheticSmoke": "passed",
+    "pythonTests": 8,
+    "scope": "Anonymous explicit development pairs and capture-selection/cleanup helper prepared. Real volunteer pilot not yet started; helper cleanup not yet exercised on real participant files. No threshold approval."
+  }
+}

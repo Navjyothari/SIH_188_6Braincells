@@ -2,11 +2,13 @@
 
 ## Status and decision
 
-This document specifies the planned face-comparison module for the Android-first prototype. It is a design and implementation guide only: no EdgeFace model, face image, embedding, threshold, or face-verification code is added by this document.
+This document specifies the planned face-comparison module for the Android-first prototype. It is the design and implementation contract. The companion checklist records implementation progress; real-model licensing, device parity and evaluated thresholds are still pending. No approved recognition verdict is enabled by this document.
 
-**Selected candidate:** EdgeFace-XS (`edgeface_xs_gamma_06`).
+**Selected first candidate:** EdgeFace-S (`edgeface_s_gamma_05`), per user decision. Evaluate S first; XS is deferred until S has been measured. The filename is retained for existing links.
 
-**Why this candidate:** it is a lightweight, pretrained face-embedding model intended for edge devices. The official EdgeFace results list 1.77M parameters and 154 MFLOPs for XS. The model family won the compact track of the 2023 Efficient Face Recognition competition. The official repository is BSD-3-Clause licensed and supplies pretrained weights. See [the official EdgeFace repository](https://github.com/otroshi/edgeface) and [its licence](https://github.com/otroshi/edgeface/blob/main/LICENSE).
+**Selection remains provisional:** benchmark EdgeFace-S (`edgeface_s_gamma_05`) alongside XS before the release choice. Official benchmarks list CFP-FP 95.74 vs 94.71 and AgeDB-30 97.03 vs 96.08 (S vs XS), with 306.12 vs 154 MFLOPs. These are not photographed-ID accuracy or device-latency results. Prefer S only if it improves development-set document-to-selfie results and meets the end-to-end p95/memory/thermal budget on representative lower-end phones. Otherwise use XS. Freeze this model choice before the final subject-disjoint held-out evaluation; do not use that test set to choose the winner. Keep each candidate's provenance, parity, quality/threshold configuration and reports separate. XS is an explicitly validated alternative, never a silent runtime fallback. The runtime accepts a single explicitly selected S or XS manifest and checksum; there is no automatic model fallback. Selecting S requires its own full release validation.
+
+**Why this candidate:** S is a pretrained edge-device face-embedding model with 3.65M parameters and about 306 MFLOPs. XS (1.77M parameters, 154 MFLOPs) is deferred until S has been evaluated. The model family won the compact track of the 2023 Efficient Face Recognition competition. The official repository is BSD-3-Clause licensed and supplies pretrained weights. See [the official EdgeFace repository](https://github.com/otroshi/edgeface) and [its licence](https://github.com/otroshi/edgeface/blob/main/LICENSE).
 
 **Runtime promise:** after the APK has been installed, the face-verification flow must need no network connection, account, cloud service, model download, or remote face database.
 
@@ -55,7 +57,7 @@ The Efficient Face Recognition competition describes EdgeFace-XS as producing a 
 1. Start from the official `otroshi/edgeface` release/checkpoint for `edgeface_xs_gamma_06`.
 2. Export that exact checkpoint to ONNX in a controlled Python environment, **or** use an ONNX export only when its source checkpoint, conversion command, exporter version, and SHA-256 hash are documented.
 3. Run desktop inference tests on the ONNX asset before adding it to Android.
-4. Put the final model at the fixed Android asset path `android/app/src/main/assets/ml/edgeface_xs.onnx`.
+4. Put the final model at the fixed Android asset path `android/app/src/main/assets/ml/edgeface.onnx`.
 5. Record the model file hash, checkpoint hash, source URL, commit/tag, conversion tool versions, tensor metadata, and licence notice in a release manifest.
 
 The community ONNX export at [yakhyo/edgeface-onnx](https://github.com/yakhyo/edgeface-onnx) lists an XS export around 6.9 MB. It is useful for experimentation, but the team must retain the provenance record above before shipping it.
@@ -97,7 +99,7 @@ The installed APK must contain the asset. A release that expects a developer to 
 
 Use Android Kotlin for model execution. Flutter owns screens, session state, and results; Kotlin owns image decoding, face detection, alignment, ONNX Runtime, and embedding generation. This avoids relying on an unmaintained Flutter ONNX wrapper.
 
-ONNX Runtime supports Android local inference. Start with CPU/XNNPACK for a predictable baseline; NNAPI is an optional per-device acceleration experiment. ONNX Runtime notes that accelerator performance is model- and device-specific. See [ONNX Runtime mobile deployment](https://onnxruntime.ai/docs/tutorials/mobile/) and [NNAPI guidance](https://onnxruntime.ai/docs/execution-providers/NNAPI-ExecutionProvider.html).
+ONNX Runtime supports Android local inference. Start with CPU/XNNPACK for a predictable baseline; Only CPU and explicitly benchmarked XNNPACK configurations are supported. NNAPI was deprecated in Android 15 and is excluded from the supported baseline; any experiment requires separate validation. ONNX Runtime notes that accelerator performance is model- and device-specific. See [ONNX Runtime mobile deployment](https://onnxruntime.ai/docs/tutorials/mobile/) and [NNAPI guidance](https://onnxruntime.ai/docs/execution-providers/NNAPI-ExecutionProvider.html).
 
 ### Android build configuration
 
@@ -111,9 +113,9 @@ Pin the exact Maven dependency version and run a minified release build on a phy
 
 ## Hardware requirements and supported-device policy
 
-### Baseline handset
+### Baseline performance class
 
-The Samsung Galaxy M21 is the low-end reference target for this module. It has an Exynos 9611: four Cortex-A73 cores at up to 2.3 GHz, four Cortex-A53 cores at up to 1.7 GHz, LPDDR4X memory, and a Mali-G72 MP3 GPU. Samsung lists the chipset as end-of-life. See [Samsung’s Exynos 9611 specification](https://semiconductor.samsung.com/kr/processor/mobile-processor/exynos-9611/).
+The target is Android phones as low-end as the Samsung Galaxy M21, across manufacturers and chipsets. The M21 is a performance-class reference, not a required handset or a device allowlist. It has an Exynos 9611: four Cortex-A73 cores at up to 2.3 GHz, four Cortex-A53 cores at up to 1.7 GHz, LPDDR4X memory, and a Mali-G72 MP3 GPU. Samsung lists the chipset as end-of-life. See [Samsung’s Exynos 9611 specification](https://semiconductor.samsung.com/kr/processor/mobile-processor/exynos-9611/).
 
 It is reasonable to target one document image and a small number of selfie captures on this device. It is not reasonable to promise continuous 30 FPS recognition or a hardware-accelerated path without measurements.
 
@@ -127,7 +129,7 @@ It is reasonable to target one document image and a small number of selfie captu
 
 ### Performance acceptance gate
 
-On the M21, with battery above 30% and normal thermal conditions, run 20 sequential supported comparisons. A release candidate passes only when all of the following hold:
+On each representative lower-end handset, with battery above 30% and normal thermal conditions, run 20 sequential supported comparisons. A release candidate passes only when all of the following hold:
 
 - no crash, out-of-memory error, or unreleased camera session;
 - the UI remains responsive;
@@ -136,7 +138,7 @@ On the M21, with battery above 30% and normal thermal conditions, run 20 sequent
 - a second test after five minutes of repeated work shows any thermal slowdown;
 - a forced airplane-mode first launch completes successfully.
 
-If XS misses the acceptance gate, switch to EdgeFace-XXS. Do not silently reduce quality checks just to make a benchmark look faster.
+If XS misses the acceptance gate, evaluate EdgeFace-XXS as a separate candidate with its own provenance, parity results, and thresholds; never switch models silently. Do not silently reduce quality checks just to make a benchmark look faster.
 
 ## Exact inference contract
 
@@ -165,7 +167,7 @@ Do not assume this from a filename. At startup and in tests, read the session me
 
 1. Create an embedding for the aligned document portrait.
 2. Create an embedding for each accepted aligned selfie frame.
-3. L2-normalize only if the inspected model contract says the output is not already normalized.
+3. Validate finite, nonzero embeddings and L2-normalize at the comparison boundary (idempotent for already normalized output). Record the original output contract in the manifest.
 4. Compute cosine similarity for each document/selfie pair.
 5. Aggregate repeated selfie scores using a documented conservative rule, such as the median of quality-approved captures.
 6. Classify the aggregate score using frozen, evaluated thresholds.
@@ -223,8 +225,8 @@ Rules for the interface:
 ```text
 android/app/src/main/
 ├── assets/ml/
-│   ├── edgeface_xs.onnx                  # release asset; checksum in manifest
-│   └── edgeface_xs_manifest.json         # source, hashes, tensor contract
+│   ├── edgeface.onnx                  # release asset; checksum in manifest
+│   └── edgeface_manifest.json         # source, hashes, tensor contract
 └── kotlin/com/sih188/borderdoc/face/
     ├── FaceDetectorAndAligner.kt
     ├── FaceQualityGate.kt
@@ -248,7 +250,9 @@ Keep a model manifest like this beside the asset:
   "modelId": "edgeface-xs-gamma-06",
   "modelVersion": "<official-release-or-git-commit>",
   "sourceCheckpoint": "<official-url>",
-  "sourceLicense": "BSD-3-Clause",
+  "codeLicense": "BSD-3-Clause",
+  "weightsLicenseStatus": "pending verification",
+  "trainingDataTermsStatus": "pending verification",
   "sourceCheckpointSha256": "<sha256>",
   "onnxSha256": "<sha256>",
   "conversionCommand": "<versioned-command>",
@@ -286,7 +290,7 @@ Before Android work, write a test that:
 4. checks output has the expected dimensions and finite values;
 5. checks normalization status and cosine calculation;
 6. confirms the same image compared with itself is approximately `1.0`; and
-7. checks that a distinct synthetic face does not use the same score range as the genuine pair.
+7. records distinct-face smoke-test scores without inventing a recognition threshold from synthetic fixtures.
 
 This is a structural test, not an accuracy study.
 
@@ -300,13 +304,13 @@ Add the pinned Android runtime dependency, configure the asset path, and build a
 4. asserts output dimensions and finite values; and
 5. closes the session.
 
-Run this on the M21 in release mode before connecting it to the camera.
+Run this on a representative M21-class handset in release mode before connecting it to the camera.
 
 ### 4. Implement common detection and alignment
 
 Use one bundled detector for both document and selfie input. Decode image orientation first. Detect faces once per still image, select a face only when exactly one face satisfies the quality gates, align it, and pass exactly the same preprocessing implementation to EdgeFace.
 
-For a live selfie flow, do detection/quality preview at a throttled cadence and only run EdgeFace after the user captures a quality-approved frame. Do not run full embedding inference on every camera preview frame on the M21.
+For a live selfie flow, do detection/quality preview at a throttled cadence and only run EdgeFace after the user captures a quality-approved frame. Do not run full embedding inference on every camera preview frame on lower-end phones.
 
 ### 5. Connect Flutter last
 
@@ -328,8 +332,8 @@ Run every release candidate in airplane mode on at least two Android phones:
 | Scenario | Expected result |
 |---|---|
 | Fresh install, radios disabled | Model loads; first comparison finishes without download. |
-| M21, clear genuine pair | A result is produced and timing is recorded. |
-| M21, clear impostor pair | Not silently reported as `MATCH`. |
+| Lower-end handset, clear genuine pair | A result is produced and timing is recorded. |
+| Lower-end handset, clear impostor pair | Not silently reported as `MATCH`. |
 | Dim/blurred selfie | `RECAPTURE` or `NOT_RUN`; never a green result. |
 | Multiple faces in frame | `RECAPTURE` / explicit reason. |
 | Rotated document capture | Orientation is corrected or explicitly rejected. |
@@ -373,13 +377,53 @@ The Android detector can locate faces and landmarks but does not itself recogniz
 - [ ] Checkpoint, ONNX, and manifest SHA-256 values recorded.
 - [ ] Desktop input/output and deterministic fixture tests pass.
 - [ ] Android smoke test passes in a minified release build.
-- [ ] M21 and a second device pass airplane-mode first launch.
-- [ ] M21 p50/p95 timing, memory, and 20-run stability report stored.
+- [ ] At least two representative lower-end devices from different chipset families pass airplane-mode first launch.
+- [ ] Per-device p50/p95 timing, memory, and 20-run stability report stored.
 - [ ] Thresholds frozen before held-out evaluation.
 - [ ] Held-out results include false match, false non-match, recapture, and not-run denominators.
 - [ ] Face images and embeddings absent from logs, exports, and the source repository.
 - [ ] UI labels and demo script use “experimental face similarity,” not authentication claims.
 - [ ] Core screening workflow still works if this module is disabled.
+
+## Implementation additions and acceptance gates
+
+### Licence evidence, not assumptions
+
+Record code, checkpoint redistribution, and training-data terms separately, including source URLs, retrieved notices, review date, intended use, and unresolved restrictions. The repository BSD-3-Clause notice is verified; the official Idiap S model card explicitly lists CC BY-NC-SA 4.0 for the model, so do not infer BSD checkpoint terms. Review the non-commercial/share-alike conditions and unresolved WebFace training-data terms before redistribution; see [the evidence record](edgeface-licence-and-provenance.md). Do not mark these checked, or claim hackathon/commercial permission, without evidence. Do not ship model weights while redistribution permission is unresolved. Runtime code and synthetic numerical tests can be developed independently.
+
+### Versioned five-point geometry
+
+Use EXIF-normalized, unmirrored image coordinates. Map ML Kit LEFT_EYE/RIGHT_EYE to the two eye points ordered by image x, NOSE_BASE to the nose point, and MOUTH_LEFT/MOUTH_RIGHT to the two mouth corners ordered by image x. Never substitute MOUTH_BOTTOM. Require all five finite in-bounds landmarks and a non-degenerate fit. Reject excessive pose before ordering.
+
+The 112 x 112 square reference is: image-left eye (38.2946, 51.6963), image-right eye (73.5318, 51.5014), nose (56.0252, 71.7366), image-left mouth (41.5493, 92.3655), image-right mouth (70.7299, 92.2041). Pin this to the official EdgeFace square-crop reference. Fit an orientation-preserving least-squares similarity transform (scale, rotation, translation; equivalent to the 2D Umeyama objective), with no reflection, shear, or independent x/y scale. Use inverse mapping, bilinear interpolation, integer pixel-center coordinates and black border fill. Version geometry and sampling together.
+
+ML Kit's nose/eye definitions are not assumed interchangeable with MTCNN. Compare ML Kit and the official reference detector/alignment on the same consented evaluation inputs, reporting failure rates, score shifts, and verification accuracy. A numerical parity pass does not establish detector equivalence.
+
+### Three separate parity checks
+
+1. Original PyTorch checkpoint versus exported desktop ONNX on identical tensors.
+2. Desktop ONNX versus Android ONNX on identical tensors, including CPU and any supported XNNPACK configuration.
+3. Python versus Kotlin preprocessing on fixed lossless RGB images and supplied landmarks; compare aligned pixels, NCHW tensors, embeddings and pair scores. Test RGB channel order, transform direction, orientation, border pixels and resizing.
+
+Start identical-tensor FP32 validation at cosine >= 0.9999 and maximum absolute difference <= 0.0001 for L2-normalized embeddings; record measured errors before freezing the tolerance. Do not silently loosen a failure to 0.98. Image preprocessing has a separately recorded tolerance. JPEG decoder and detector differences need their own end-to-end evaluation. Synthetic fixtures establish correctness, not biometric accuracy. Test embeddings must remain local/test-only and never enter the application result channel.
+
+### Document and selfie quality policies
+
+Use separately versioned minimum face-width/height rules in source pixels before upscaling. Check a document portrait's clipped highlights/glare as well as blur and exposure; bright paper outside the face must not trigger the glare metric. Initial engineering cutoffs are provisional until development-set evaluation. Grayscale printing is supported as three equal RGB channels. Collect real document-photo-to-selfie conditions: printing/security patterns, glare, small portraits, compression, facial hair, glasses and expected age gaps. The UNCERTAIN band exists for inconclusive comparisons; a recapture may not fix an old portrait. Major occlusion cannot be inferred reliably from landmark presence alone and remains a release evaluation gate.
+
+### Runtime and asset integrity
+
+Verify the bundled ONNX SHA-256 against the manifest before creating a session. Require manifest tensor names, shapes and dtypes to agree with runtime metadata. Reject non-finite or zero-norm outputs. Initialize and warm up on a background worker; report cold startup separately from warmed inference. Serialize verification and shutdown, bound input image memory, and close native resources.
+
+Benchmark CPU thread counts 1, 2 and 4 on representative lower-end devices; four threads do not imply affinity to the four performance cores. Start with CPU, two intra-op threads, one inter-op thread, sequential execution. XNNPACK has its own pool: test its pool and ORT fallback pool together and avoid oversubscription. No NNAPI production path. No quantization in this baseline; any future quantized model needs fresh parity and held-out accuracy evaluation.
+
+### Evaluation honesty and future work
+
+Use subject-disjoint development/test splits. Freeze the quality policy, aggregation rule, detector, model, alignment and thresholds as one configuration. Report MATCH, UNCERTAIN, NO_MATCH, NOT_RUN and RECAPTURE with denominators and confidence intervals. With few volunteers, findings are indicative only; many correlated pairs do not establish a low false-accept rate. Use subject-aware resampling where observations share identities and report distinct subject counts. Zero observed false accepts is not a zero population false-accept rate.
+
+Future work: randomized head-pose challenges may use ML Kit Euler angles but do not establish liveness and do not stop replayed video. EdgeFace-S escalation for UNCERTAIN is a later experiment requiring evaluation of the entire cascade, separate thresholds and device budgets. Neither is required for the XS baseline.
+
+The actionable implementation and manual verification record is in [edgeface-implementation-checklist.md](edgeface-implementation-checklist.md).
 
 ## Sources
 
@@ -390,3 +434,25 @@ The Android detector can locate faces and landmarks but does not itself recogniz
 - [ONNX Runtime NNAPI execution-provider guidance](https://onnxruntime.ai/docs/execution-providers/NNAPI-ExecutionProvider.html)
 - [Samsung Exynos 9611 specifications](https://semiconductor.samsung.com/kr/processor/mobile-processor/exynos-9611/)
 - [ML Kit face detection](https://developers.google.com/ml-kit/vision/face-detection)
+
+- [NNAPI deprecation](https://developer.android.com/ndk/guides/neuralnetworks/migration-guide)
+- [XNNPACK thread-pool guidance](https://onnxruntime.ai/docs/execution-providers/Xnnpack-ExecutionProvider.html)
+- [Official alignment reference](https://github.com/otroshi/edgeface/blob/main/face_alignment/mtcnn_pytorch/src/align_trans.py)
+
+
+### Startup timing clarification — 2026-09-24
+
+The user accepts approximately three seconds for cold startup. Record cold startup separately; it is not subject to the two-second warm-processing target. Warm latency, sustained behaviour and memory still require measurement. This does not establish a new hard cold-start maximum.
+
+
+### Automatic portrait location and document scope — 2026-09-25
+
+Capture the whole document for OCR. Do not require portrait tapping, manual cropping or hiding legitimate secondary/security portraits. Face detection produces candidate face regions; EdgeFace embeds the selected aligned portrait, not the full page. Detection count is not a count of distinct people.
+
+The initial automatic adapter is deliberately narrow: a single detected document face uses the existing pipeline; multiple faces require a recognized Indian passport-style layout. Bundled Latin OCR reads the full image. The adapter requires unambiguous Republic of India, passport, surname and given-name labels with consistent relative geometry, then selects the unique detected portrait to the left of the name-field column beneath the header. It never chooses a face just because it is largest, leftmost in the camera frame, or coloured. No text values or OCR transcript are saved by this locator. Unknown/ambiguous layouts abstain. This is a provisional layout rule, not a learned universal document detector or an authenticity check.
+
+The live input continues to require exactly one face. Selected document portraits still pass all existing quality/alignment checks. The decision policy is additionally bound to `documentPortraitVersion=single-face-or-indian-passport-ocr-anchors-v1`; existing evaluation approval remains false. Original full-resolution pixels remain available to the eventual OCR field pipeline. The on-screen OCR result in this branch remains a development placeholder; adding layout-anchor OCR is not completion of OCR field extraction/validation.
+
+The existing roadmap currently scopes the screening prototype to one fictional passport-style layout and explicitly excludes Aadhaar support. Local document-to-live face experiments are not proof of a working document parser. Broader passport/visa/ID/Aadhaar coverage requires separate layout adapters, field parsers and tests before it is advertised. No inherent EdgeFace restriction requires passports, but document-screening support is a separate capability.
+
+Dependency: bundled `com.google.mlkit:text-recognition:16.0.1`, following the official Android integration guide: https://developers.google.com/ml-kit/vision/text-recognition/v2/android. It is packaged at build time; no OCR model download is requested on the phone.

@@ -31,7 +31,8 @@ import 'face_verification_result.dart';
 ///   computing the final result.
 class FaceVerificationService {
   // Channel name must match FACE_CHANNEL in MainActivity.kt exactly.
-  static const _channel = MethodChannel('com.sih188.borderdoc/face_verification');
+  static const _channel =
+      MethodChannel('com.sih188.borderdoc/face_verification');
 
   /// Feature flag — set to false to disable the module globally.
   /// When false, [verifyFace] returns NOT_RUN immediately.
@@ -43,15 +44,15 @@ class FaceVerificationService {
   // Public API
   // ---------------------------------------------------------------------------
 
-  /// Checks whether the TFLite model loaded successfully on the native side.
+  /// Checks whether the EdgeFace ONNX model loaded successfully on the native side.
   ///
   /// Returns false if the module is disabled, or if the Kotlin side is
-  /// unavailable (e.g. running on iOS or a simulator without TFLite).
+  /// unavailable (e.g. running on iOS or a simulator without EdgeFace ONNX).
   Future<bool> isModuleAvailable() async {
     if (!enabled) return false;
     try {
       return await _channel.invokeMethod<bool>('isModuleAvailable') ?? false;
-    } on PlatformException catch (_) {
+    } catch (_) {
       return false;
     }
   }
@@ -61,7 +62,7 @@ class FaceVerificationService {
   /// Parameters:
   ///   [liveImagePath]      — absolute path to the live-captured face JPEG.
   ///   [referenceImagePath] — absolute path to the reference face JPEG, or
-  ///                          null to use the bundled synthetic reference.
+  ///                          null to return NOT_RUN (a document is required).
   ///
   /// Returns a [FaceVerificationResult] whose status is one of:
   ///   MATCH | NO_MATCH | UNCERTAIN | NOT_RUN
@@ -72,7 +73,7 @@ class FaceVerificationService {
     String? referenceImagePath,
   }) async {
     // Guard: module disabled
-    if (!enabled) {
+    if (!enabled || referenceImagePath == null || referenceImagePath.isEmpty) {
       return FaceVerificationResult.notRun();
     }
 
@@ -80,23 +81,13 @@ class FaceVerificationService {
       final raw = await _channel.invokeMapMethod<dynamic, dynamic>(
         'verifyFace',
         {
-          'liveImagePath':      liveImagePath,
+          'liveImagePath': liveImagePath,
           'referenceImagePath': referenceImagePath,
         },
       );
 
       if (raw == null) return FaceVerificationResult.notRun();
       return FaceVerificationResult.fromMap(raw);
-
-    } on PlatformException catch (e) {
-      // Log but do NOT rethrow — the module must fail silently.
-      // Replace with your app's logger if available.
-      assert(() {
-        // ignore: avoid_print
-        print('[FaceVerification] PlatformException: ${e.message}');
-        return true;
-      }());
-      return FaceVerificationResult.notRun();
     } catch (_) {
       return FaceVerificationResult.notRun();
     }
@@ -116,7 +107,7 @@ class FaceVerificationService {
     required String documentImagePath,
   }) =>
       verifyFace(
-        liveImagePath:      selfieImagePath,
+        liveImagePath: selfieImagePath,
         referenceImagePath: documentImagePath,
       );
 }

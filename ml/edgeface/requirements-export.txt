@@ -1,0 +1,9 @@
+# Candidate export environment; only mark validated after an actual export.
+torch==2.7.1
+torchvision==0.22.1
+timm==0.9.2
+onnx==1.18.0
+onnxruntime==1.22.0
+numpy==1.26.4
+Pillow==11.2.1
+opencv-python-headless==4.11.0.86

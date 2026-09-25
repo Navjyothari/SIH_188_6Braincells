@@ -32,3 +32,11 @@ Thumbs.db
 
 # Release assets (intentionally not in git)
 release-assets/
+
+# Local verification output and Python caches
+*.log
+__pycache__/
+ml/edgeface/.venv/
+# Local official checkpoint and golden embedding packaged only in instrumentation APK.
+android/app/src/androidTest/assets/ml/
+android/app/src/androidTest/assets/edgeface/

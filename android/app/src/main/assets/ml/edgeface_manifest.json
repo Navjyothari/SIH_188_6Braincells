@@ -1,0 +1,29 @@
+{
+  "modelId": "edgeface-s-gamma-05",
+  "modelVersion": "edgeface-s-gamma-05/pending",
+  "redistributionStatus": "pending",
+  "codeLicense": "BSD-3-Clause",
+  "weightsLicenseStatus": "pending",
+  "trainingDataTermsStatus": "pending",
+  "onnxSha256": "pending",
+  "alignmentVersion": "five-point-similarity-bilinear-v1",
+  "input": {
+    "name": "input",
+    "shape": [
+      1,
+      3,
+      112,
+      112
+    ],
+    "dtype": "float32",
+    "normalization": "(rgb/255 - 0.5) / 0.5"
+  },
+  "output": {
+    "name": "embedding",
+    "shape": [
+      1,
+      512
+    ],
+    "dtype": "float32"
+  }
+}

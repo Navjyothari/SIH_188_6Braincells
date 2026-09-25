@@ -19,7 +19,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app/screening_session.dart';
-import '../modules/face_verification/face_verification_result.dart';
 import '../widgets/face_verification_result_card.dart';
 
 class ScreeningEvidenceScreen extends StatelessWidget {

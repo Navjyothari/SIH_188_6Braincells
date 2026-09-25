@@ -15,7 +15,6 @@
 //     authenticity or forgery signal.
 //   - No tap interaction is provided; this is a read-only result display.
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../modules/face_verification/face_verification_result.dart';
 
@@ -44,7 +43,8 @@ class FaceVerificationResultCard extends StatelessWidget {
             // Header row
             // ----------------------------------------------------------------
             Row(children: [
-              Icon(Icons.face_retouching_natural, size: 20, color: Colors.blueGrey.shade400),
+              Icon(Icons.face_retouching_natural,
+                  size: 20, color: Colors.blueGrey.shade400),
               const SizedBox(width: 8),
               Text(
                 'Face Verification (M3 — experimental)',
@@ -65,7 +65,7 @@ class FaceVerificationResultCard extends StatelessWidget {
             // ----------------------------------------------------------------
             // Detail rows (score, threshold, model) — only when ran
             // ----------------------------------------------------------------
-            if (r.status != FaceVerificationStatus.notRun) ...[
+            if (r.similarityScore != null) ...[
               _DetailRow(
                 label: 'Similarity score',
                 value: r.similarityScore != null
@@ -80,18 +80,13 @@ class FaceVerificationResultCard extends StatelessWidget {
                 value: r.thresholdUsed != null
                     ? '≥ ${r.thresholdUsed!.toStringAsFixed(2)}'
                     : '—',
-                tooltip: 'Fixed on 20-pair synthetic dev set (DiffusionFace AAAI 2024). '
-                    'Not tuned on test or demo data.',
+                tooltip:
+                    'Versioned EdgeFace threshold, frozen before held-out evaluation.',
               ),
               _DetailRow(
                 label: 'Model',
                 value: r.modelVersion,
               ),
-              if (r.liveCropPath != null || r.refCropPath != null)
-                _DebugCropsRow(
-                  livePath: r.liveCropPath,
-                  refPath: r.refCropPath,
-                ),
             ] else ...[
               // NOT_RUN detail
               _NotRunDetail(result: r),
@@ -110,10 +105,11 @@ class FaceVerificationResultCard extends StatelessWidget {
   }
 
   Color _borderColor(FaceVerificationStatus status) => switch (status) {
-        FaceVerificationStatus.match     => Colors.green,
-        FaceVerificationStatus.noMatch   => Colors.red,
+        FaceVerificationStatus.match => Colors.green,
+        FaceVerificationStatus.noMatch => Colors.red,
         FaceVerificationStatus.uncertain => Colors.orange,
-        FaceVerificationStatus.notRun    => Colors.grey,
+        FaceVerificationStatus.notRun => Colors.grey,
+        FaceVerificationStatus.recapture => Colors.orange,
       };
 }
 
@@ -130,14 +126,31 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon, label) = switch (status) {
-      FaceVerificationStatus.match =>
-        (Colors.green.shade700, Icons.check_circle_rounded, 'MATCH'),
-      FaceVerificationStatus.noMatch =>
-        (Colors.red.shade700, Icons.cancel_rounded, 'NO MATCH'),
-      FaceVerificationStatus.uncertain =>
-        (Colors.orange.shade800, Icons.help_rounded, 'UNCERTAIN'),
-      FaceVerificationStatus.notRun =>
-        (Colors.grey.shade600, Icons.remove_circle_outline_rounded, 'NOT RUN'),
+      FaceVerificationStatus.match => (
+          Colors.green.shade700,
+          Icons.check_circle_rounded,
+          'MATCH'
+        ),
+      FaceVerificationStatus.noMatch => (
+          Colors.red.shade700,
+          Icons.cancel_rounded,
+          'NO MATCH'
+        ),
+      FaceVerificationStatus.uncertain => (
+          Colors.orange.shade800,
+          Icons.help_rounded,
+          'UNCERTAIN'
+        ),
+      FaceVerificationStatus.recapture => (
+          Colors.orange.shade800,
+          Icons.camera_alt_outlined,
+          'RETAKE SELFIE'
+        ),
+      FaceVerificationStatus.notRun => (
+          Colors.grey.shade600,
+          Icons.remove_circle_outline_rounded,
+          'NOT RUN'
+        ),
     };
 
     return Container(
@@ -197,7 +210,9 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                  fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
+                  fontSize: 12,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w500),
             ),
           ),
           Expanded(
@@ -237,19 +252,9 @@ class _NotRunDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSkipped = result.modelVersion == 'not-run/skipped-by-officer';
-    String reasonText;
-    if (isSkipped) {
-      reasonText = 'Face check was skipped by the officer.\n'
-          'This is permitted. No similarity score was produced.';
-    } else if (result.debugInfo != null) {
-      reasonText = 'Face check did not run.\n[DEBUG]\n${result.debugInfo!}';
-    } else {
-      reasonText = 'Face check did not run. Possible reasons:\n'
-          '  • No face detected in document photo\n'
-          '  • No face detected in selfie capture\n'
-          '  • Module unavailable (model asset missing)\n'
-          'OCR and rule results above are unaffected.';
-    }
+    final reasonText = isSkipped
+        ? 'Face check was skipped. No similarity score was produced.'
+        : result.explanation;
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -297,65 +302,8 @@ class _ExperimentalDisclaimer extends StatelessWidget {
         '⚠ Experimental — similarity score only. '
         'NOT an authenticity or forgery signal. '
         'Results are indicative only; a human officer makes all final decisions. '
-        'No face image or embedding is stored.',
+        'The comparison module does not save face crops or embeddings.',
         style: TextStyle(fontSize: 10, color: Colors.black87),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Debug Crops display
-// ---------------------------------------------------------------------------
-
-class _DebugCropsRow extends StatelessWidget {
-  final String? livePath;
-  final String? refPath;
-
-  const _DebugCropsRow({this.livePath, this.refPath});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '[DEBUG] Aligned Crops (112x112):',
-            style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              if (refPath != null) ...[
-                Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400)),
-                      child: Image.file(File(refPath!), width: 56, height: 56, fit: BoxFit.cover),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text('Doc', style: TextStyle(fontSize: 9, color: Colors.black54)),
-                  ],
-                ),
-                const SizedBox(width: 12),
-              ],
-              if (livePath != null) ...[
-                Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade400)),
-                      child: Image.file(File(livePath!), width: 56, height: 56, fit: BoxFit.cover),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text('Live', style: TextStyle(fontSize: 9, color: Colors.black54)),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ],
       ),
     );
   }

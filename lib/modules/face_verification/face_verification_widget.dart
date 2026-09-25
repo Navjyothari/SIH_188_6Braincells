@@ -25,8 +25,7 @@ import 'face_verification_service.dart';
 class FaceVerificationWidget extends StatefulWidget {
   final FaceVerificationService service;
 
-  /// Optional pre-selected reference image path. When null, the bundled
-  /// synthetic reference is used on the Kotlin side.
+  /// Document portrait image path. Without it the comparison does not run.
   final String? referenceImagePath;
 
   const FaceVerificationWidget({
@@ -77,7 +76,7 @@ class _FaceVerificationWidgetState extends State<FaceVerificationWidget> {
             if (_liveImagePath != null) ...[
               const SizedBox(height: 16),
               _ResultBadge(result: _result),
-              if (_result.status != FaceVerificationStatus.notRun) ...[
+              if (_result.similarityScore != null) ...[
                 const SizedBox(height: 8),
                 _ScoreRow(result: _result),
               ],
@@ -202,6 +201,7 @@ class _ResultBadge extends StatelessWidget {
       FaceVerificationStatus.match     => (Colors.green,  Icons.check_circle),
       FaceVerificationStatus.noMatch   => (Colors.red,    Icons.cancel),
       FaceVerificationStatus.uncertain => (Colors.orange, Icons.help),
+      FaceVerificationStatus.recapture => (Colors.orange, Icons.camera_alt_outlined),
       FaceVerificationStatus.notRun    => (Colors.grey,   Icons.remove_circle_outline),
     };
 

@@ -1,3 +1,5 @@
+HISTORICAL NOTICE: The MobileFaceNet model and synthetic reference below are no longer packaged in this branch. EdgeFace checkpoint licence verification is pending; retain its actual notices before adding weights.
+
 Third-party asset licences for the face-verification module (M3)
 ================================================================
 

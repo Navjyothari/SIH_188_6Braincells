@@ -18,6 +18,8 @@ android {
         jvmTarget = '1.8'
     }
 
+    buildFeatures { buildConfig true }
+
     defaultConfig {
         applicationId "com.sih188.borderdoc"
         minSdkVersion flutter.minSdkVersion
@@ -29,16 +31,15 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
-            shrinkResources false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
-    // Keep .tflite uncompressed so the runtime can mmap the file directly
-    // from the APK without a full extract — saves RAM and launch time.
+    // Keep the ONNX release asset uncompressed.
     aaptOptions {
-        noCompress "tflite"
+        noCompress "onnx"
     }
 
     sourceSets {
@@ -59,24 +60,10 @@ dependencies {
     // Ref: https://developers.google.com/ml-kit/vision/face-detection/android
     // ---------------------------------------------------------------
     implementation 'com.google.mlkit:face-detection:16.1.5'
+    implementation 'com.google.mlkit:text-recognition:16.0.1' // Bundled offline OCR layout anchors.
 
-    // ---------------------------------------------------------------
-    // TensorFlow Lite — CPU-only runtime + support library.
-    // GPU/NNAPI delegates are intentionally excluded to keep the
-    // module simple, reproducible, and device-independent.
-    // License: Apache 2.0
-    // ---------------------------------------------------------------
-    implementation 'org.tensorflow:tensorflow-lite:2.14.0'
-    implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'
-
-    // ---------------------------------------------------------------
-    // Coroutines + Play Services tasks adapter — needed by
-    // FaceVerificationModule.kt which uses CountDownLatch with
-    // ML Kit's Task<T>. The play-services adapter provides the
-    // kotlinx.coroutines.tasks.await extension used in the module.
-    // ---------------------------------------------------------------
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
+    // CPU-only baseline; XNNPACK requires separate device validation.
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.22.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

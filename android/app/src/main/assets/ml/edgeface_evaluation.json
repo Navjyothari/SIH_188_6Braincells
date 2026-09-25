@@ -1,0 +1,15 @@
+{
+  "approved": false,
+  "androidParityPassed": false,
+  "heldOutEvaluationPassed": false,
+  "reportId": "",
+  "thresholdVersion": "",
+  "onnxSha256": "pending",
+  "qualityVersion": "quality-provisional-v1",
+  "detectorVersion": "mlkit-bundled-16.1.5",
+  "alignmentVersion": "five-point-similarity-bilinear-v1",
+  "aggregation": "median-all-accepted-v1",
+  "noMatchBelow": null,
+  "matchAtOrAbove": null,
+  "documentPortraitVersion": "single-face-or-indian-passport-ocr-anchors-v1"
+}

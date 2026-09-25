@@ -1,131 +1,133 @@
-// face_verification_result.dart
-// M3 — Face Verification Module (optional, removable)
-//
-// Dart counterpart of the Kotlin FaceVerificationResult data class.
-// All fields mirror the MethodChannel map returned by FaceVerificationModule.toMap().
+enum FaceVerificationStatus { match, noMatch, uncertain, notRun, recapture }
 
-/// Verification status enum — matches Kotlin status strings exactly.
-///
-/// NOT_RUN covers all cases where the module could not produce a verdict:
-///   - module disabled by feature flag
-///   - TFLite model failed to load
-///   - no face detected in either image
-///   - consent/licence conditions not met
-///
-/// IMPORTANT: The module NEVER returns a fake score or a hardcoded verdict.
-/// If NOT_RUN, similarityScore and thresholdUsed are both null.
-enum FaceVerificationStatus {
-  /// Both faces matched above the THRESHOLD_MATCH threshold.
-  match,
-
-  /// Score was below THRESHOLD_UNCERTAIN — faces are different.
-  noMatch,
-
-  /// Score fell between THRESHOLD_UNCERTAIN and THRESHOLD_MATCH —
-  /// inconclusive; human review recommended.
-  uncertain,
-
-  /// Module did not run or could not produce a result.
-  notRun,
-}
-
-/// Structured result returned by the face verification pipeline.
-///
-/// OUTPUT CONTRACT:
-/// ┌─────────────────────────────────────────────────────────────┐
-/// │  status          : FaceVerificationStatus                   │
-/// │  similarityScore : double? (cosine sim ∈ [−1, 1]) or null  │
-/// │  thresholdUsed   : double? or null                          │
-/// │  modelVersion    : String (always set)                      │
-/// └─────────────────────────────────────────────────────────────┘
-///
-/// ⚠ similarityScore is a cosine SIMILARITY between two face embeddings.
-///   It is NOT an authenticity score, a forgery probability, or any
-///   signal about document genuineness.
+/// Experimental similarity result. No embeddings or image paths cross this boundary.
 class FaceVerificationResult {
-  /// The outcome of the verification attempt
   final FaceVerificationStatus status;
-
-  /// Cosine similarity ∈ [-1, 1]. Null if NOT_RUN.
   final double? similarityScore;
-
-  /// The threshold value against which the score was evaluated
   final double? thresholdUsed;
-
-  /// Version of the MobileFaceNet asset used
   final String modelVersion;
+  final String reasonCode;
+  final String? thresholdVersion;
+  final String? detectorVersion;
+  final String? alignmentVersion;
+  final String? qualityVersion;
+  final Map<String, num> timingMs;
 
-  /// Debug info string for detection failures
-  final String? debugInfo;
+  const FaceVerificationResult(
+      {required this.status,
+      this.similarityScore,
+      this.thresholdUsed,
+      required this.modelVersion,
+      this.reasonCode = 'UNAVAILABLE',
+      this.thresholdVersion,
+      this.detectorVersion,
+      this.alignmentVersion,
+      this.qualityVersion,
+      this.timingMs = const {}});
 
-  /// Absolute paths to the aligned crop images saved for debugging
-  final String? liveCropPath;
-  final String? refCropPath;
-
-  const FaceVerificationResult({
-    required this.status,
-    this.similarityScore,
-    this.thresholdUsed,
-    required this.modelVersion,
-    this.debugInfo,
-    this.liveCropPath,
-    this.refCropPath,
-  });
-
-  /// Returns a NOT_RUN result — used when the module is disabled or
-  /// before any verification has been attempted.
   factory FaceVerificationResult.notRun() => const FaceVerificationResult(
-        status:       FaceVerificationStatus.notRun,
-        modelVersion: 'mobilefacenet-v1-192d-bsd3',
-      );
+      status: FaceVerificationStatus.notRun,
+      modelVersion: 'edgeface-s-gamma-05/pending');
+  factory FaceVerificationResult.skippedByOfficer() =>
+      const FaceVerificationResult(
+          status: FaceVerificationStatus.notRun,
+          modelVersion: 'not-run/skipped-by-officer',
+          reasonCode: 'SKIPPED');
 
-  /// Returns a NOT_RUN result with the reason "skipped by officer".
-  ///
-  /// Per project rules, face verification is NEVER a mandatory gate.
-  /// Officers may skip it at any point in the flow. This factory
-  /// produces a clearly labelled NOT_RUN that surfaces the skip reason
-  /// on the evidence screen, distinct from a detection failure.
-  factory FaceVerificationResult.skippedByOfficer() => const FaceVerificationResult(
-        status:       FaceVerificationStatus.notRun,
-        modelVersion: 'not-run/skipped-by-officer',
-      );
-
-  /// Deserialises the Map returned over the MethodChannel.
   factory FaceVerificationResult.fromMap(Map<dynamic, dynamic> map) {
-    final statusStr = map['status'] as String? ?? 'NOT_RUN';
-    final status = _parseStatus(statusStr);
-    return FaceVerificationResult(
-      status:          status,
-      similarityScore: (map['similarityScore'] as num?)?.toDouble(),
-      thresholdUsed:   (map['thresholdUsed']   as num?)?.toDouble(),
-      modelVersion:    map['modelVersion'] as String? ?? 'unknown',
-      debugInfo:       map['debugInfo'] as String?,
-      liveCropPath:    map['liveCropPath'] as String?,
-      refCropPath:     map['refCropPath'] as String?,
-    );
-  }
-
-  static FaceVerificationStatus _parseStatus(String s) {
-    switch (s) {
-      case 'MATCH':     return FaceVerificationStatus.match;
-      case 'NO_MATCH':  return FaceVerificationStatus.noMatch;
-      case 'UNCERTAIN': return FaceVerificationStatus.uncertain;
-      default:          return FaceVerificationStatus.notRun;
+    try {
+      final status = switch (map['status']) {
+        'MATCH' => FaceVerificationStatus.match,
+        'NO_MATCH' => FaceVerificationStatus.noMatch,
+        'UNCERTAIN' => FaceVerificationStatus.uncertain,
+        'RECAPTURE' => FaceVerificationStatus.recapture,
+        _ => FaceVerificationStatus.notRun,
+      };
+      final scored = {
+        FaceVerificationStatus.match,
+        FaceVerificationStatus.noMatch,
+        FaceVerificationStatus.uncertain
+      }.contains(status);
+      final score = (map['similarityScore'] as num?)?.toDouble();
+      final threshold = (map['thresholdUsed'] as num?)?.toDouble();
+      final version = map['thresholdVersion'] as String?;
+      if (scored &&
+          (map['reasonCode'] != 'COMPLETED' ||
+              [
+                'modelVersion',
+                'detectorVersion',
+                'alignmentVersion',
+                'qualityVersion'
+              ].any((key) =>
+                  map[key] is! String || (map[key] as String).isEmpty))) {
+        return FaceVerificationResult.notRun();
+      }
+      if (scored &&
+          (score == null ||
+              !score.isFinite ||
+              score < -1 ||
+              score > 1 ||
+              threshold == null ||
+              !threshold.isFinite ||
+              threshold < -1 ||
+              threshold > 1 ||
+              version == null ||
+              version.isEmpty ||
+              (status == FaceVerificationStatus.match && score < threshold))) {
+        return FaceVerificationResult.notRun();
+      }
+      return FaceVerificationResult(
+          status: status,
+          similarityScore: scored ? score : null,
+          thresholdUsed: scored ? threshold : null,
+          modelVersion: map['modelVersion'] as String? ?? 'unknown',
+          reasonCode: map['reasonCode'] as String? ?? 'UNAVAILABLE',
+          thresholdVersion: scored ? version : null,
+          detectorVersion: map['detectorVersion'] as String?,
+          alignmentVersion: map['alignmentVersion'] as String?,
+          qualityVersion: map['qualityVersion'] as String?,
+          timingMs: Map<String, num>.from(map['timingMs'] as Map? ?? {}));
+    } catch (_) {
+      return FaceVerificationResult.notRun();
     }
   }
 
-  /// Human-readable label for display only — NOT a claim of authenticity.
-  String get displayLabel {
-    switch (status) {
-      case FaceVerificationStatus.match:     return 'Face match';
-      case FaceVerificationStatus.noMatch:   return 'Face mismatch';
-      case FaceVerificationStatus.uncertain: return 'Inconclusive';
-      case FaceVerificationStatus.notRun:    return 'Not run';
-    }
-  }
+  String get displayLabel => switch (status) {
+        FaceVerificationStatus.match => 'Similarity threshold met',
+        FaceVerificationStatus.noMatch => 'Low face similarity',
+        FaceVerificationStatus.uncertain => 'Inconclusive',
+        FaceVerificationStatus.notRun => 'Not run',
+        FaceVerificationStatus.recapture => 'Retake selfie',
+      };
 
-  @override
-  String toString() =>
-      'FaceVerificationResult(status: $status, score: $similarityScore, '
-      'threshold: $thresholdUsed, model: $modelVersion, liveCrop: $liveCropPath, refCrop: $refCropPath)';
+  String get explanation {
+    if (reasonCode == 'EVALUATION_PENDING')
+      return 'Face comparison is awaiting validation. Continue with manual review.';
+    if (reasonCode == 'MODEL_UNAVAILABLE')
+      return 'Face comparison is unavailable. Continue with manual review.';
+    if (reasonCode == 'DOCUMENT_REQUIRED')
+      return 'Capture the document portrait first.';
+    if (reasonCode == 'SKIPPED') return 'Face comparison was skipped.';
+    if (reasonCode.contains('GLARE'))
+      return 'Retake the document photo without glare on the portrait.';
+    if (reasonCode.contains('TOO_SMALL'))
+      return 'Move closer so the portrait is clear and large enough.';
+    if (reasonCode.contains('PORTRAIT_LAYOUT'))
+      return 'The main portrait could not be located automatically in this document layout. Continue with manual review.';
+    if (reasonCode.contains('MULTIPLE_FACES'))
+      return 'Include exactly one face in the image.';
+    if (reasonCode.contains('BLUR'))
+      return 'Hold the camera steady and retake a sharp photo.';
+    if (reasonCode.contains('POSE'))
+      return 'Use a frontal portrait and look straight at the selfie camera.';
+    if (reasonCode.contains('EXPOSURE'))
+      return 'Retake the photo in even lighting.';
+    if (reasonCode.startsWith('DOCUMENT_'))
+      return 'No usable portrait could be read from this document photo.';
+    if (status == FaceVerificationStatus.recapture)
+      return 'Retake a clear, frontal selfie with your face unobstructed.';
+    if (reasonCode == 'BUSY')
+      return 'A comparison is already running. Try again shortly.';
+    return 'Face comparison did not run. Other screening checks are unaffected.';
+  }
 }
