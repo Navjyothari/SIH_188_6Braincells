@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 /** Full image remains OCR input; only the chosen detected face goes to alignment. */
 internal object DocumentPortraitLocator {
-    fun select(image: Bitmap, faces: List<Face>, diagnostic: ((Map<String, Any>)->Unit)? = null): List<Face> {
+    fun select(image: Bitmap, faces: List<Face>, detectionWidth: Int, detectionHeight: Int, diagnostic: ((Map<String, Any>)->Unit)? = null): List<Face> {
         if(faces.size<=1) return faces
         val recognizer=TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         // Own this copy so a timeout cannot recycle an image still being read by OCR.
@@ -33,9 +33,12 @@ internal object DocumentPortraitLocator {
             val cues=listOf("REPUBLICOFINDIA","REPUBLIC","INDIA","PASSPORT","SURNAME","SUMAME","GIVENNAMES","GIVENNAME","GIVEN")
             diagnostic?.invoke(cues.associateWith { cue -> labels.count { normalized(it.text).contains(cue) } } + mapOf("lineCount" to labels.size, "faceCount" to faces.size))
             val boxes=faces.map { face -> face.boundingBox.let { b -> doubleArrayOf(
-                b.left.toDouble()/image.width,b.top.toDouble()/image.height,
-                b.right.toDouble()/image.width,b.bottom.toDouble()/image.height) } }
+                b.left.toDouble()/detectionWidth,b.top.toDouble()/detectionHeight,
+                b.right.toDouble()/detectionWidth,b.bottom.toDouble()/detectionHeight) } }
             return listOf(faces[PassportPortraitLayout.select(boxes,labels)])
         } finally { if(closeOnExit) { input.recycle(); recognizer.close() } }
     }
+
+    fun select(image: Bitmap, faces: List<Face>, diagnostic: ((Map<String, Any>)->Unit)? = null): List<Face> =
+        select(image, faces, image.width, image.height, diagnostic)
 }

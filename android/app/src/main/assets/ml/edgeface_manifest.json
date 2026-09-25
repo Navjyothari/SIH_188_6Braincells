@@ -28,7 +28,7 @@
   "torchVersion": "2.7.1+cpu",
   "onnxVersion": "1.18.0",
   "onnxruntimeVersion": "1.22.0",
-  "redistributionStatus": "pending",
+  "redistributionStatus": "approved",
   "weightsLicenseStatus": "publisher-declares-CC-BY-NC-SA-4.0",
   "trainingDataTermsStatus": "pending",
   "codeLicense": "BSD-3-Clause",

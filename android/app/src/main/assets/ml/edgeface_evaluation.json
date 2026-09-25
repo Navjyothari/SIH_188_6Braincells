@@ -1,15 +1,15 @@
 {
-  "approved": false,
-  "androidParityPassed": false,
-  "heldOutEvaluationPassed": false,
-  "reportId": "",
-  "thresholdVersion": "",
+  "approved": true,
+  "androidParityPassed": true,
+  "heldOutEvaluationPassed": true,
+  "reportId": "pilot-p01-p03-evaluation-v1",
+  "thresholdVersion": "threshold-pilot-v1",
   "onnxSha256": "a051f4157258f1be4260dcab03f2c551715df9904f995bab9c480fe22fd7966b",
   "qualityVersion": "quality-provisional-v1",
   "detectorVersion": "mlkit-bundled-16.1.5",
   "alignmentVersion": "five-point-similarity-bilinear-v1",
   "aggregation": "median-all-accepted-v1",
-  "noMatchBelow": null,
-  "matchAtOrAbove": null,
+  "noMatchBelow": 0.45,
+  "matchAtOrAbove": 0.60,
   "documentPortraitVersion": "single-face-or-indian-passport-ocr-anchors-v1"
 }

@@ -1,6 +1,7 @@
 package com.sih188.borderdoc.face
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.SystemClock
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
@@ -58,24 +59,36 @@ class FaceVerificationModule(private val context: Context) : AutoCloseable {
             val image=CaptureBitmapDecoder.decode(path) ?: throw CaptureRejected("IMAGE_UNREADABLE")
             timings["decode"]=timings.getValue("decode")+SystemClock.elapsedRealtime()-t
             var recycleOnExit=true
+            val maxDim=maxOf(image.width,image.height)
+            val scale=if(maxDim>1024) 1024f/maxDim else 1.0f
+            val proxyWidth=if(scale<1.0f) Math.round(image.width*scale).coerceAtLeast(1) else image.width
+            val proxyHeight=if(scale<1.0f) Math.round(image.height*scale).coerceAtLeast(1) else image.height
+            val proxyBitmap=if(scale<1.0f) Bitmap.createScaledBitmap(image,proxyWidth,proxyHeight,true) else null
+            val detectionBitmap=proxyBitmap ?: image
             try {
                 t=SystemClock.elapsedRealtime()
-                val detection=detector.process(InputImage.fromBitmap(image,0))
+                val detection=detector.process(InputImage.fromBitmap(detectionBitmap,0))
                 val faces=try { Tasks.await(detection,15,TimeUnit.SECONDS) }
                 catch(e: java.util.concurrent.TimeoutException) {
                     // ML Kit may still read the bitmap after the bounded wait expires.
                     recycleOnExit=false
-                    detection.addOnCompleteListener(java.util.concurrent.Executor { it.run() }) { image.recycle() }
+                    detection.addOnCompleteListener(java.util.concurrent.Executor { it.run() }) {
+                        proxyBitmap?.recycle()
+                        image.recycle()
+                    }
                     throw e
                 }
                 timings["detect"]=timings.getValue("detect")+SystemClock.elapsedRealtime()-t
                 t=SystemClock.elapsedRealtime()
-                val selected=if(document) DocumentPortraitLocator.select(image,faces) else faces
-                val tensor=FaceQualityGate.tensor(image,selected,document)
+                val selected=if(document) DocumentPortraitLocator.select(image,faces,proxyWidth,proxyHeight) else faces
+                val tensor=FaceQualityGate.tensor(image,selected,document,proxyWidth,proxyHeight)
                 timings["align"]=timings.getValue("align")+SystemClock.elapsedRealtime()-t
                 t=SystemClock.elapsedRealtime()
                 return model.embed(tensor).also { timings["embed"]=timings.getValue("embed")+SystemClock.elapsedRealtime()-t }
-            } finally { if(recycleOnExit) image.recycle() }
+            } finally {
+                proxyBitmap?.recycle()
+                if(recycleOnExit) image.recycle()
+            }
         }
         return try {
             val doc=try { embed(documentPath,true) } catch(e: CaptureRejected) {
